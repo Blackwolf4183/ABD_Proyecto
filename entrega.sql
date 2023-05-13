@@ -11,8 +11,6 @@ AS
     TYPE FechaArray IS TABLE OF DATE INDEX BY BINARY_INTEGER;
     Fechas FechaArray;
     
-    n_estudiantes NUMBER;
-    n_aulas_necesarias_por_hora NUMBER;
     capacidad_aulas NUMBER;
     
     n_aulas_hist NUMBER;
@@ -24,17 +22,7 @@ AS
 BEGIN
     
     SELECT MIN(CAPACIDAD_EXAMEN) INTO capacidad_aulas FROM AULA;
-    
-    n_estudiantes := 0; -- Initialize the variable
-  
-      FOR materia IN materias_alumnos LOOP
-        n_estudiantes := n_estudiantes + materia.N;
-      END LOOP;
-    
-    n_aulas_necesarias_por_hora := ROUND(n_estudiantes/capacidad_aulas);
 
-  
-    DBMS_OUTPUT.PUT_LINE('ALUMNOS TOTALES: ' || n_estudiantes || ' aulas necesarias: ' || n_aulas_necesarias_por_hora);
     
     Fechas(1) := TO_DATE('2023/05/01 08:00:00', 'yyyy/mm/dd hh24:mi:ss');
     Fechas(2) := TO_DATE('2023/05/02 11:30:00', 'yyyy/mm/dd hh24:mi:ss');
@@ -94,6 +82,40 @@ DELETE FROM EXAMEN;
 
 BEGIN
    RELLENA_EXAMEN;  
+END;
+/
+
+-- Rellenar tabla de vigilancia
+-- Tabla vigilancia
+CREATE OR REPLACE PROCEDURE RELLENA_VIGILANCIA 
+AS
+    CURSOR examenes IS 
+    SELECT * FROM EXAMEN
+    WHERE FECHAYHORA IN (TO_DATE('2023/05/01 08:00:00', 'yyyy/mm/dd hh24:mi:ss'), 
+                        TO_DATE('2023/05/02 11:30:00', 'yyyy/mm/dd hh24:mi:ss'),
+                        TO_DATE('2023/05/03 13:00:00', 'yyyy/mm/dd hh24:mi:ss'));
+    
+    VOCAL_DNI VARCHAR(9);
+BEGIN
+   FOR examen IN examenes LOOP
+        SELECT DISTINCT DNI INTO VOCAL_DNI
+        FROM VOCAL
+        WHERE DNI NOT IN (SELECT VOCAL_DNI FROM VIGILANCIA WHERE EXAMEN_FECHAYHORA = examen.FECHAYHORA )
+        FETCH FIRST 1 ROW ONLY;
+   
+        INSERT INTO VIGILANCIA VALUES(VOCAL_DNI, examen.FECHAYHORA, examen.AULA_CODIGO, examen.AULA_SEDE_CODIGO);
+           
+    END LOOP;
+END;
+/
+
+
+
+DELETE FROM VIGILANCIA;
+
+
+BEGIN
+    RELLENA_VIGILANCIA;
 END;
 /
 
