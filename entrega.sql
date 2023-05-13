@@ -119,6 +119,41 @@ BEGIN
 END;
 /
 
+-- Rellena asistencia
+-- Rellenar tabla asistencia
+CREATE OR REPLACE PROCEDURE RELLENAR_ASISTENCIA 
+AS
+    CURSOR ALUMNOS IS 
+    SELECT * FROM MATRICULA;
+    
+    asiste_aleatorio CHAR(1);
+
+BEGIN
+
+    FOR asignatura IN (SELECT 'HisE' str FROM dual
+            UNION ALL
+            SELECT 'Len' str FROM dual
+            UNION ALL
+            SELECT 'IngAcc' str FROM dual)
+    LOOP
+        FOR alumno IN ALUMNOS LOOP
+        DBMS_RANDOM.initialize;
+        asiste_aleatorio := CASE DBMS_RANDOM.value(1, 2,3,4)
+                           WHEN 1 THEN 'N'
+                           ELSE 'S'
+                           END;
+            -- añadimos a la asistencia cada alumnoç
+            --TODO: falta por hacer
+            INSERT INTO ASISTENCIA VALUES(asiste_aleatorio, asiste_aleatorio, alumno.DNI,
+                                          asignatura.str, );
+    
+        END LOOP;
+    END LOOP;
+    
+
+END;
+/
+
 
 -- 1.Vistas de Ocupación
 /*
