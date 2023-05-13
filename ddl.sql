@@ -24,7 +24,7 @@ CREATE TABLE asistencia (
     materia_codigo      VARCHAR2(50) NOT NULL,
     examen_fechayhora   DATE NOT NULL,
     examen_aula_codigo  VARCHAR2(50) NOT NULL,
-    examen_aula_codigo1 VARCHAR2(50) NOT NULL
+    examen_sede_codigo VARCHAR2(50) NOT NULL
 );
 
 ALTER TABLE asistencia
@@ -32,7 +32,7 @@ ALTER TABLE asistencia
                                                materia_codigo,
                                                examen_fechayhora,
                                                examen_aula_codigo,
-                                               examen_aula_codigo1 ) USING INDEX TABLESPACE TS_INDICES;
+                                               examen_sede_codigo ) USING INDEX TABLESPACE TS_INDICES;
 
 CREATE TABLE aula (
     codigo           VARCHAR2(50) NOT NULL,
@@ -98,26 +98,26 @@ CREATE TABLE vigilancia (
     vocal_dni           VARCHAR2(9) NOT NULL,
     examen_fechayhora   DATE NOT NULL,
     examen_aula_codigo  VARCHAR2(50) NOT NULL,
-    examen_aula_codigo1 VARCHAR2(50) NOT NULL
+    examen_sede_codigo VARCHAR2(50) NOT NULL
 );
 
 ALTER TABLE vigilancia
     ADD CONSTRAINT vigilancia_pk PRIMARY KEY ( vocal_dni,
                                                 examen_fechayhora,
                                                 examen_aula_codigo,
-                                                examen_aula_codigo1 ) USING INDEX TABLESPACE TS_INDICES;
+                                                examen_sede_codigo ) USING INDEX TABLESPACE TS_INDICES;
 
 CREATE TABLE materia_examen (
     examen_fechayhora   DATE NOT NULL,
     examen_aula_codigo  VARCHAR2(50) NOT NULL,
-    examen_aula_codigo1 VARCHAR2(50) NOT NULL,
+    examen_sede_codigo VARCHAR2(50) NOT NULL,
     materia_codigo      VARCHAR2(50) NOT NULL
 );
 
 ALTER TABLE materia_examen
     ADD CONSTRAINT materia_examen_pk PRIMARY KEY ( examen_fechayhora,
                                                 examen_aula_codigo,
-                                                examen_aula_codigo1,
+                                                examen_sede_codigo,
                                                 materia_codigo ) USING INDEX TABLESPACE TS_INDICES;
 
 CREATE TABLE sede (
@@ -162,7 +162,7 @@ ALTER TABLE asistencia
 ALTER TABLE asistencia
     ADD CONSTRAINT asistencia_examen_fk FOREIGN KEY ( examen_fechayhora,
                                                       examen_aula_codigo,
-                                                      examen_aula_codigo1 )
+                                                      examen_sede_codigo )
         REFERENCES examen ( fechayhora,
                             aula_codigo,
                             aula_sede_codigo );
@@ -200,7 +200,7 @@ ALTER TABLE matricula
 ALTER TABLE vigilancia
     ADD CONSTRAINT vigilancia_examen_fk FOREIGN KEY ( examen_fechayhora,
                                                        examen_aula_codigo,
-                                                       examen_aula_codigo1 )
+                                                       examen_sede_codigo )
         REFERENCES examen ( fechayhora,
                             aula_codigo,
                             aula_sede_codigo );
@@ -212,7 +212,7 @@ ALTER TABLE vigilancia
 ALTER TABLE materia_examen
     ADD CONSTRAINT materia_examen_examen_fk FOREIGN KEY ( examen_fechayhora,
                                                        examen_aula_codigo,
-                                                       examen_aula_codigo1 )
+                                                       examen_sede_codigo )
         REFERENCES examen ( fechayhora,
                             aula_codigo,
                             aula_sede_codigo );
