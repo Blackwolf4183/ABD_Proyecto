@@ -1,7 +1,9 @@
 -- PEVAU --
 -- PRACTICA 1 --
---4)
 
+
+-- Creación de la tabla externa
+--Importante quitar la primera fila del archivo .csv (eliminar con un editor de texto las cabeceras, de otra forma no deja importarlo)
 create table estudiantes_ext(
     centro              VARCHAR2(550),
     nombre              VARCHAR2(550), 
@@ -26,12 +28,14 @@ ORGANIZATION EXTERNAL (
  LOCATION ('datos-estudiantes-pevau.csv')
  );
 
---Importnte quitar la primera fila del archivo.
+-- Vemos los datos importados en la tabla
 SELECT * FROM estudiantes_ext;
 
---Action: Don't do that!
+--Action: Don't do that! --> Vemos que no se posible modificar los valores de dicha tabla
 UPDATE estudiantes_ext SET APELLIDO1='Gomez' WHERE ESTUDIANTES_EXT.NOMBRE = 'Carlos';
 
+
+--Vista V_ESTUDIANTES
 create or replace view v_estudiantes as
 SELECT dni, nombre, apellido1 ||' '||apellido2 apellidos,
  telefono,
@@ -40,6 +44,7 @@ SELECT dni, nombre, apellido1 ||' '||apellido2 apellidos,
 FROM estudiantes_ext
  where dni is not null;
 
+-- Los centros diferentes de la vista v_estudiantes
 select DISTINCT centro from v_estudiantes;
 
 --5)
@@ -56,6 +61,16 @@ ON ESTUDIANTE (CORREO)
 TABLESPACE TS_INDICES;
 
 SELECT * FROM USER_INDEXES;
+
+-- QUERY para ver los indices en la base de datos con su tipo y de que tabla vienen
+SELECT ui.index_name, ui.table_name, ui.tablespace_name,
+       DECODE(ui.index_type, 'BITMAP', 'Bitmap',
+                             'FUNCTION-BASED', 'Function-based',
+                             'NORMAL', '-B+ Tree') as index_type
+FROM user_indexes ui
+LEFT JOIN user_ind_partitions uip ON ui.index_name = uip.index_name
+LEFT JOIN user_ind_subpartitions uis ON ui.index_name = uis.index_name
+ORDER BY ui.index_name;
 
 -- ¿En qué tablespace reside la tabla ESTUDIANTE? ¿Y los índices? (compruébelo consultando el diccionario de datos) --> EN TS_PEVAU / EN TS_INDICES
 SELECT table_name, tablespace_name
@@ -122,8 +137,6 @@ select * from Centro;
 rollback; -- para borrarlo
 
 -- Insertamos los centros:
--- pequeño ajuste (se aplicará en el ddl para la proxima)
-ALTER TABLE CENTRO MODIFY NOMBRE VARCHAR2(150);
 insert into centro (nombre) select distinct centro from
 v_estudiantes;
 select * from centro;
@@ -361,3 +374,39 @@ END;
 /
 
 
+
+
+-- ULTIMA PRACTICA
+
+
+-- Trigger TS_BORRA_AULA
+CREATE OR REPLACE TRIGGER TR_BORRA_AULA
+BEFORE DELETE ON AULA
+FOR EACH ROW
+DECLARE
+    --Declaramos una variable para poder comprobar el numero de examenes que hay en el aula
+    v_num_examenes INTEGER;
+BEGIN
+    -- Comprobamos si ya se ha realizado algun examen en el aula
+    SELECT COUNT(*) INTO v_num_examenes
+    FROM EXAMEN
+    WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA IS NOT NULL;
+    
+    IF v_num_examenes > 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'No se puede borrar el aula porque ya se han realizado exámenes en la misma.');
+    END IF;
+    
+    -- Comprobamos si se va a realizar algun examen en el aula en las proximas 48 horas
+    SELECT COUNT(*) INTO v_num_examenes
+    FROM EXAMEN
+    WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA BETWEEN SYSDATE AND SYSDATE + 2;
+    
+    IF v_num_examenes > 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'No se puede borrar el aula porque hay exámenes planificados en las próximas 48 horas.');
+    END IF;
+    
+    -- Como resultado, todos los examenes que esten planificados para dicha aula se eliminan de la tabla "EXAMEN"
+    DELETE FROM EXAMEN
+    WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA >= SYSDATE;
+END;
+/

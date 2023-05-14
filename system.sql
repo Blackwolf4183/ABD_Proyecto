@@ -1,12 +1,17 @@
 -- system --
 -- PRACTICA 1 --
---1)
+
+
+-- Creación de tablespace TS_PEVAU
 CREATE TABLESPACE TS_PEVAU DATAFILE 'C:\USERS\APP\ALUMNOS\ORADATA\ORCL\TS_PEVAU.DBF' SIZE 50M;
 
+-- Creación de usuario PEVAU.
 CREATE USER PEVAU IDENTIFIED BY pevau_contrasena DEFAULT TABLESPACE TS_PEVAU QUOTA 50M ON TS_PEVAU;
 
+-- Damos los permisos necesarios a PEVAU;
 GRANT CREATE TABLE, CREATE VIEW, CREATE MATERIALIZED VIEW, CREATE SEQUENCE, CREATE PROCEDURE, CREATE SESSION TO PEVAU;
 
+-- Creación tablespace TS_INDICES
 CREATE TABLESPACE TS_INDICES DATAFILE 'C:\USERS\APP\ALUMNOS\ORADATA\ORCL\TS_INDICES.DBF' SIZE 50M;
 
 ALTER USER PEVAU QUOTA 50M ON TS_INDICES;
@@ -19,12 +24,12 @@ SELECT USERNAME, DEFAULT_TABLESPACE FROM DBA_USERS WHERE USERNAME = 'PEVAU';
 --  Comprobar consultando el diccionario de datos los datafiles que tienen asociado TS_PEVAU y TS_INDICES.
 SELECT TABLESPACE_NAME, FILE_NAME, BYTES/1024/1024 SIZE_MB FROM DBA_DATA_FILES ;
 
---4)
+-- Directorio para la tabla externa
 create or replace directory directorio_ext as 'C:\Users\app\alumnos\admin\orcl\dpdump';
 
 grant read, write on directory directorio_ext to PEVAU;
 
---7)
+-- Más persmisos para PEVAU
 GRANT CREATE TRIGGER TO PEVAU;
 
 GRANT CREATE PUBLIC SYNONYM TO PEVAU;
