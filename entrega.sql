@@ -191,6 +191,7 @@ devuelva el código de sede, su nombre, código de aula, fecha de examen y número 
 vigilantes que han vigilado un examen, agrupando por dicha sede, su nombre, código de
 aula y fecha de examen.
 */
+
 CREATE OR REPLACE VIEW V_VIGILANTES AS
 SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(v.VOCAL_DNI) AS num_vigilantes
 FROM sede s
@@ -198,6 +199,65 @@ INNER JOIN examen e ON s.codigo = e.aula_sede_codigo
 INNER JOIN vigilancia v ON e.aula_codigo = v.examen_aula_codigo
 GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;
 
+
+--2.Paquete PK_OCUPACION
+
+CREATE OR REPLACE PACKAGE PK_OCUPACION AS
+  FUNCTION OCUPACION_MAXIMA(p_cod_sede IN sede.codigo%TYPE, p_cod_aula IN aula.codigo%TYPE) RETURN NUMBER;
+  FUNCTION OCUPACION_OK RETURN BOOLEAN;
+  FUNCTION VOCAL_DUPLICADO(p_cod_vocal IN vocal.dni%TYPE) RETURN BOOLEAN;
+  FUNCTION VOCALES_DUPLICADOS RETURN BOOLEAN;
+  FUNCTION VOCAL_RATIO(p_ratio IN NUMBER) RETURN BOOLEAN;
+END PK_OCUPACION;
+/
+
+
+/*
+1. Implementar una función denominada OCUPACION_MAXIMA que reciba como
+argumento el código de sede y de aula y devuelva el número máximo simultáneo de
+personas que han estado presente en ella. Hay que tener en cuenta los diferentes
+exámenes y además que el número de personas es igual al número de estudiantes, más
+los vocales presentes en ella.
+2. Implementar una función denominada OCUPACION_OK que devuelva un booleano a
+TRUE si todos los exámenes aún no realizados tienen un número de estudiantes
+asignados a un aula inferior o igual al atributo Capacidad_Examen y el número total
+de personas (alumnos + vocales) no supera al atributo Capacidad.
+3. Implementar una función denominada VOCAL_DUPLICADO que reciba como
+argumento el identificador de un vocal y devuelva TRUE si dicho vocal está asignado a
+más de un examen en la misma franja horaria. Como es de esperar esto es algo que no
+debería ocurrir.
+4. Implementar una función denominada VOCALES_DUPLICADOS que devuelva TRUE
+si alguno de los vocales está asignado a más de un examen en la misma franja.
+5. Implementar una función denominada VOCAL_RATIO que recibe un número entero y
+que devuelva un booleano a TRUE si en todos los exámenes aún no realizados hay el
+número indicado (o menos) de alumnos por cada vigilante.
+
+*/
+
+CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
+  FUNCTION OCUPACION_MAXIMA(p_cod_sede IN sede.codigo%TYPE, p_cod_aula IN aula.codigo%TYPE) RETURN NUMBER IS
+  v_ocupacion_maxima NUMBER;
+  BEGIN
+  SELECT MAX(num_asistentes) INTO v_ocupacion_maxima
+    FROM (
+      SELECT COUNT(*) AS num_asistentes
+      FROM examen e
+      JOIN asistencia a ON e.FECHAYHORA = a.EXAMEN_FECHAYHORA --la fecha y hora del examen lo identifican
+      JOIN aula au ON e.aula_codigo = au.codigo
+      WHERE e.aula_sede_codigo = p_cod_sede AND e.aula_codigo = p_cod_aula
+      GROUP BY e.fechayhora
+      UNION ALL
+      SELECT COUNT(*) + 1 AS num_asistentes
+      FROM examen e
+      JOIN vigilancia v ON e.FECHAYHORA = v.EXAMEN_FECHAYHORA
+      JOIN aula au ON e.aula_codigo = au.codigo
+      WHERE e.AULA_SEDE_CODIGO = p_cod_sede AND e.AULA_CODIGO = p_cod_aula
+      GROUP BY e.FECHAYHORA
+    ) t;
+  RETURN v_ocupacion_maxima;
+  END OCUPACION_MAXIMA;
+END PK_OCUPACION;
+/
 
 
 
