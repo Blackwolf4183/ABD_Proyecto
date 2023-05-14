@@ -296,14 +296,44 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
 END PK_OCUPACION;
 /
 
+--4.
+--Queremos implementar (mediante un trigger denominado TR_BORRA_AULA) el
+--borrado de un aula (mediante una sentencia DELETE sobre la tabla AULA) que cumpla
+--las siguientes condiciones:
+--a. El borrado de un aula no es posible si ya se ha realizado un examen, o bien si
+--hay planificado un examen antes de las próximas 48 horas.
+--b. Si no se ha realizado examen ni hay planificado uno en las próximas 48 horas el
+--borrado del aula implica el borrado de los exámenes planificados en la misma.
 
 
 
-
-
-
-
-
-
-
-
+CREATE OR REPLACE TRIGGER TR_BORRA_AULA
+BEFORE DELETE ON AULA
+FOR EACH ROW
+DECLARE
+    --Declaramos una variable para poder comprobar el numero de examenes que hay en el aula
+    v_num_examenes INTEGER;
+BEGIN
+    -- Comprobamos si ya se ha realizado algun examen en el aula
+    SELECT COUNT(*) INTO v_num_examenes
+    FROM EXAMEN
+    WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA IS NOT NULL;
+    
+    IF v_num_examenes > 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'No se puede borrar el aula porque ya se han realizado exámenes en la misma.');
+    END IF;
+    
+    -- Comprobamos si se va a realizar algun examen en el aula en las proximas 48 horas
+    SELECT COUNT(*) INTO v_num_examenes
+    FROM EXAMEN
+    WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA BETWEEN SYSDATE AND SYSDATE + 2;
+    
+    IF v_num_examenes > 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'No se puede borrar el aula porque hay exámenes planificados en las próximas 48 horas.');
+    END IF;
+    
+    -- Como resultado, todos los examenes que esten planificados para dicha aula se eliminan de la tabla "EXAMEN"
+    DELETE FROM EXAMEN
+    WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA >= SYSDATE;
+END;
+/
