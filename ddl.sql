@@ -20,7 +20,7 @@ ALTER TABLE ane ADD CONSTRAINT ane_pk PRIMARY KEY ( dni ) USING INDEX TABLESPACE
 CREATE TABLE asistencia (
     asiste              CHAR(1),
     entrega             CHAR(1),
-    ane_dni             VARCHAR2(9) NOT NULL,
+    estudiante_dni      VARCHAR2(9) NOT NULL,
     materia_codigo      VARCHAR2(50) NOT NULL,
     examen_fechayhora   DATE NOT NULL,
     examen_aula_codigo  VARCHAR2(50) NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE asistencia (
 );
 
 ALTER TABLE asistencia
-    ADD CONSTRAINT asistencia_pk PRIMARY KEY ( ane_dni,
+    ADD CONSTRAINT asistencia_pk PRIMARY KEY ( estudiante_dni,
                                                materia_codigo,
                                                examen_fechayhora,
                                                examen_aula_codigo,
@@ -156,8 +156,8 @@ ALTER TABLE ane
         REFERENCES estudiante ( dni );
 
 ALTER TABLE asistencia
-    ADD CONSTRAINT asistencia_ane_fk FOREIGN KEY ( ane_dni )
-        REFERENCES ane ( dni );
+    ADD CONSTRAINT asistencia_estudiante_fk FOREIGN KEY ( estudiante_dni )
+        REFERENCES estudiante ( dni );
 
 ALTER TABLE asistencia
     ADD CONSTRAINT asistencia_examen_fk FOREIGN KEY ( examen_fechayhora,
