@@ -121,14 +121,23 @@ END;
 
 -- Rellena asistencia
 -- Rellenar tabla asistencia
+-- Rellenar tabla asistencia
 CREATE OR REPLACE PROCEDURE RELLENAR_ASISTENCIA 
 AS
     CURSOR ALUMNOS IS 
     SELECT * FROM MATRICULA;
     
+    
+    -- capacidad de las aulas para el examen
+    capacidad_aulas NUMBER;
     asiste_aleatorio CHAR(1);
-
+    
+    aula_codigo VARCHAR(50);
+    aula_sede_codigo VARCHAR(50);
+    fechayhora DATE;
+    
 BEGIN
+    SELECT MIN(CAPACIDAD_EXAMEN) INTO capacidad_aulas FROM AULA;
 
     FOR asignatura IN (SELECT 'HisE' str FROM dual
             UNION ALL
@@ -137,20 +146,48 @@ BEGIN
             SELECT 'IngAcc' str FROM dual)
     LOOP
         FOR alumno IN ALUMNOS LOOP
-        DBMS_RANDOM.initialize;
-        asiste_aleatorio := CASE DBMS_RANDOM.value(1, 2,3,4)
-                           WHEN 1 THEN 'N'
-                           ELSE 'S'
-                           END;
-            -- a√±adimos a la asistencia cada alumno√ß
-            --TODO: falta por hacer
-            INSERT INTO ASISTENCIA VALUES(asiste_aleatorio, asiste_aleatorio, alumno.DNI,
-                                          asignatura.str, );
+        
+            IF alumno.MATERIA_CODIGO = asignatura.str THEN
+                asiste_aleatorio := CASE DBMS_RANDOM.value(1, 4)
+                         WHEN 1 THEN 'N'
+                         ELSE 'S'
+                         END;
+    
+                -- a√±adimos a la asistencia cada alumno
+                -- tenemos que seleccionar de examen una, donde la suma de los alumnos que 
+                -- asisten ya ah√≠ no sea ya igual a la capacidad de examen
+                
+                SELECT EXAMEN_AULA_CODIGO, EXAMEN_AULA_CODIGO1, EXAMEN_FECHAYHORA INTO aula_codigo,aula_sede_codigo, fechayhora
+                FROM 
+                (
+                    SELECT e.*, COALESCE(COUNT(a.examen_aula_codigo), 0) AS N 
+                    FROM MATERIA_EXAMEN e
+                    LEFT JOIN ASISTENCIA a ON a.EXAMEN_FECHAYHORA = e.EXAMEN_FECHAYHORA AND a.EXAMEN_AULA_CODIGO = e.EXAMEN_AULA_CODIGO
+                    WHERE e.MATERIA_CODIGO=asignatura.str
+                    GROUP BY e.EXAMEN_FECHAYHORA, e.EXAMEN_AULA_CODIGO,e.EXAMEN_AULA_CODIGO1,e.MATERIA_CODIGO
+                )
+                
+                WHERE N < 1000  FETCH FIRST 1 ROW ONLY;
+                
+    
+                --DBMS_OUTPUT.PUT_LINE('alumno.ESTUDIANTE_DNI: ' || alumno.ESTUDIANTE_DNI || 'aula_codigo: ' || aula_codigo);
+      
+                INSERT INTO ASISTENCIA VALUES(asiste_aleatorio, asiste_aleatorio, alumno.ESTUDIANTE_DNI,
+                                              asignatura.str,fechayhora,aula_codigo,aula_sede_codigo );
+                    
+            END IF; 
     
         END LOOP;
     END LOOP;
     
 
+END;
+/
+
+
+DELETE FROM ASISTENCIA;
+BEGIN
+    RELLENAR_ASISTENCIA;
 END;
 /
 
@@ -171,10 +208,10 @@ INNER JOIN asistencia a ON e.aula_codigo = a.examen_aula_codigo
 GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;
 
 /*
-2. Crear una vista V_OCUPACION que re˙na las tablas de sedes, examen y asistencia y
-devuelva el cÛdigo de sede, su nombre, cÛdigo de aula, fecha de examen y n˙mero de
-estudiantes que han asistido a un examen (atributo ASISTE = ëSIí), agrupando por dicha
-sede, su nombre, cÛdigo de aula y fecha de examen.
+2. Crear una vista V_OCUPACION que reÔøΩna las tablas de sedes, examen y asistencia y
+devuelva el cÔøΩdigo de sede, su nombre, cÔøΩdigo de aula, fecha de examen y nÔøΩmero de
+estudiantes que han asistido a un examen (atributo ASISTE = ÔøΩSIÔøΩ), agrupando por dicha
+sede, su nombre, cÔøΩdigo de aula y fecha de examen.
 */
 
 CREATE OR REPLACE VIEW V_OCUPACION AS
@@ -186,9 +223,9 @@ WHERE a.asiste = 'S'
 GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;
 
 /*
-3. Crear una vista V_VIGILANTES que re˙na las tablas de sedes, examen y vigilancia y
-devuelva el cÛdigo de sede, su nombre, cÛdigo de aula, fecha de examen y n˙mero de
-vigilantes que han vigilado un examen, agrupando por dicha sede, su nombre, cÛdigo de
+3. Crear una vista V_VIGILANTES que reÔøΩna las tablas de sedes, examen y vigilancia y
+devuelva el cÔøΩdigo de sede, su nombre, cÔøΩdigo de aula, fecha de examen y nÔøΩmero de
+vigilantes que han vigilado un examen, agrupando por dicha sede, su nombre, cÔøΩdigo de
 aula y fecha de examen.
 */
 
@@ -213,24 +250,24 @@ END PK_OCUPACION;
 
 
 /*
-1. Implementar una funciÛn denominada OCUPACION_MAXIMA que reciba como
-argumento el cÛdigo de sede y de aula y devuelva el n˙mero m·ximo simult·neo de
+1. Implementar una funciÔøΩn denominada OCUPACION_MAXIMA que reciba como
+argumento el cÔøΩdigo de sede y de aula y devuelva el nÔøΩmero mÔøΩximo simultÔøΩneo de
 personas que han estado presente en ella. Hay que tener en cuenta los diferentes
-ex·menes y adem·s que el n˙mero de personas es igual al n˙mero de estudiantes, m·s
+exÔøΩmenes y ademÔøΩs que el nÔøΩmero de personas es igual al nÔøΩmero de estudiantes, mÔøΩs
 los vocales presentes en ella.
-2. Implementar una funciÛn denominada OCUPACION_OK que devuelva un booleano a
-TRUE si todos los ex·menes a˙n no realizados tienen un n˙mero de estudiantes
-asignados a un aula inferior o igual al atributo Capacidad_Examen y el n˙mero total
+2. Implementar una funciÔøΩn denominada OCUPACION_OK que devuelva un booleano a
+TRUE si todos los exÔøΩmenes aÔøΩn no realizados tienen un nÔøΩmero de estudiantes
+asignados a un aula inferior o igual al atributo Capacidad_Examen y el nÔøΩmero total
 de personas (alumnos + vocales) no supera al atributo Capacidad.
-3. Implementar una funciÛn denominada VOCAL_DUPLICADO que reciba como
-argumento el identificador de un vocal y devuelva TRUE si dicho vocal est· asignado a
-m·s de un examen en la misma franja horaria. Como es de esperar esto es algo que no
-deberÌa ocurrir.
-4. Implementar una funciÛn denominada VOCALES_DUPLICADOS que devuelva TRUE
-si alguno de los vocales est· asignado a m·s de un examen en la misma franja.
-5. Implementar una funciÛn denominada VOCAL_RATIO que recibe un n˙mero entero y
-que devuelva un booleano a TRUE si en todos los ex·menes a˙n no realizados hay el
-n˙mero indicado (o menos) de alumnos por cada vigilante.
+3. Implementar una funciÔøΩn denominada VOCAL_DUPLICADO que reciba como
+argumento el identificador de un vocal y devuelva TRUE si dicho vocal estÔøΩ asignado a
+mÔøΩs de un examen en la misma franja horaria. Como es de esperar esto es algo que no
+deberÔøΩa ocurrir.
+4. Implementar una funciÔøΩn denominada VOCALES_DUPLICADOS que devuelva TRUE
+si alguno de los vocales estÔøΩ asignado a mÔøΩs de un examen en la misma franja.
+5. Implementar una funciÔøΩn denominada VOCAL_RATIO que recibe un nÔøΩmero entero y
+que devuelva un booleano a TRUE si en todos los exÔøΩmenes aÔøΩn no realizados hay el
+nÔøΩmero indicado (o menos) de alumnos por cada vigilante.
 
 */
 
