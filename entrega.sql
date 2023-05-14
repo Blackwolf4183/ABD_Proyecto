@@ -162,3 +162,51 @@ asistencia y devuelva el cÃ³digo de sede, su nombre, cÃ³digo de aula, fecha de e
 nÃºmero de estudiantes asignados a un examen, agrupando por dicha sede, su nombre,
 cÃ³digo de aula y fecha de examen.
 */
+
+CREATE OR REPLACE VIEW V_OCUPACION_ASIGNADA AS
+SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(a.asiste) AS num_estudiantes
+FROM sede s
+INNER JOIN examen e ON s.codigo = e.aula_sede_codigo
+INNER JOIN asistencia a ON e.aula_codigo = a.examen_aula_codigo
+GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;
+
+/*
+2. Crear una vista V_OCUPACION que reúna las tablas de sedes, examen y asistencia y
+devuelva el código de sede, su nombre, código de aula, fecha de examen y número de
+estudiantes que han asistido a un examen (atributo ASISTE = ‘SI’), agrupando por dicha
+sede, su nombre, código de aula y fecha de examen.
+*/
+
+CREATE OR REPLACE VIEW V_OCUPACION AS
+SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(a.asiste) AS num_estudiantes
+FROM sede s
+INNER JOIN examen e ON s.codigo = e.aula_sede_codigo
+INNER JOIN asistencia a ON e.aula_codigo = a.examen_aula_codigo
+WHERE a.asiste = 'S'
+GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;
+
+/*
+3. Crear una vista V_VIGILANTES que reúna las tablas de sedes, examen y vigilancia y
+devuelva el código de sede, su nombre, código de aula, fecha de examen y número de
+vigilantes que han vigilado un examen, agrupando por dicha sede, su nombre, código de
+aula y fecha de examen.
+*/
+CREATE OR REPLACE VIEW V_VIGILANTES AS
+SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(v.VOCAL_DNI) AS num_vigilantes
+FROM sede s
+INNER JOIN examen e ON s.codigo = e.aula_sede_codigo
+INNER JOIN vigilancia v ON e.aula_codigo = v.examen_aula_codigo
+GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;
+
+
+
+
+
+
+
+
+
+
+
+
+
