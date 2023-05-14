@@ -201,7 +201,7 @@ cÃ³digo de aula y fecha de examen.
 */
 
 CREATE OR REPLACE VIEW V_OCUPACION_ASIGNADA AS
-SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(a.asiste) AS num_estudiantes
+SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(a.estudiante_dni) AS num_estudiantes
 FROM sede s
 INNER JOIN examen e ON s.codigo = e.aula_sede_codigo
 INNER JOIN asistencia a ON e.aula_codigo = a.examen_aula_codigo
@@ -215,7 +215,7 @@ sede, su nombre, cï¿½digo de aula y fecha de examen.
 */
 
 CREATE OR REPLACE VIEW V_OCUPACION AS
-SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(a.asiste) AS num_estudiantes
+SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(a.estudiante_dni) AS num_estudiantes
 FROM sede s
 INNER JOIN examen e ON s.codigo = e.aula_sede_codigo
 INNER JOIN asistencia a ON e.aula_codigo = a.examen_aula_codigo
@@ -272,6 +272,8 @@ nï¿½mero indicado (o menos) de alumnos por cada vigilante.
 */
 
 CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
+
+--1
   FUNCTION OCUPACION_MAXIMA(p_cod_sede IN sede.codigo%TYPE, p_cod_aula IN aula.codigo%TYPE) RETURN NUMBER IS
   v_ocupacion_maxima NUMBER;
   BEGIN
@@ -293,6 +295,77 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
     ) t;
   RETURN v_ocupacion_maxima;
   END OCUPACION_MAXIMA;
+  
+  --2
+  FUNCTION OCUPACION_OK RETURN BOOLEAN IS 
+  v_ocupacion NUMBER;
+  BEGIN
+    -- Comprobar que para todos los exámenes aún no realizados,
+    -- el número de estudiantes asignados a un aula es inferior o igual a Capacidad_Examen
+    FOR examen IN (SELECT *
+                   FROM examen
+                   WHERE fechayhora > SYSDATE)
+    LOOP
+        SELECT COUNT(*) INTO v_ocupacion
+        FROM asistencia a
+        JOIN examen e ON a.examen_fechayhora = e.fechayhora
+        JOIN aula au ON e.aula_codigo = au.codigo;
+        
+        IF v_ocupacion > au.capacidad_examen THEN
+            RETURN FALSE;
+        END IF;
+    END LOOP;
+    
+    -- Comprobar que el número total de personas no supera Capacidad
+    SELECT COUNT(*) INTO v_ocupacion
+    FROM asistencia a
+    JOIN examen e ON a.examen_fechayhora = e.fechayhora
+    JOIN aula au ON e.aula_codigo = au.codigo
+    JOIN sede s ON au.sede_codigo = s.codigo;
+    
+    IF v_ocupacion > au.capacidad THEN
+        RETURN FALSE;
+    END IF;
+
+    RETURN TRUE;
+    END OCUPACION_OK;
+    
+    --3
+    FUNCTION VOCAL_DUPLICADO(p_cod_vocal IN vocal.dni%TYPE) RETURN BOOLEAN IS
+    vocal_duplicado BOOLEAN :=FALSE;
+    BEGIN
+        SELECT COUNT(*) INTO vocal_duplicado
+        FROM (
+            SELECT DISTINCT e1.fechayhora, e2.fechayhora
+            FROM examen e1
+            JOIN examen e2 ON e1.fechayhora <> e2.fechayhora -- <> == diferente
+            JOIN vigilancia ve1 ON e1.fechayhora = ve1.examen_fechayhora
+            JOIN vigilancia ve2 ON e2.fechayhora = ve2.examen_fechayhora
+            JOIN vocal v ON ve1.vocal_dni = v.dni AND ve2.vocal_dni = v.dni
+            WHERE e1.fecha_examen = e2.fecha_examen
+            AND v.dni = p_cod_vocal
+    );
+    RETURN (vocal_duplicado>0);
+    END VOCAL_DUPLICADO;
+    
+    --4
+    FUNCTION VOCALES_DUPLICADOS RETURN BOOLEAN IS
+        vocales_duplicados BOOLEAN :=FALSE;
+        BEGIN
+            SELECT COUNT(*) INTO vocales_duplicados
+        FROM (
+            SELECT DISTINCT e1.fechayhora, e2.fechayhora
+            FROM examen e1
+            JOIN examen e2 ON e1.fechayhora <> e2.fechayhora -- <> == diferente
+            JOIN vigilancia ve1 ON e1.fechayhora = ve1.examen_fechayhora
+            JOIN vigilancia ve2 ON e2.fechayhora = ve2.examen_fechayhora
+            JOIN vocal v ON ve1.vocal_dni = v.dni AND ve2.vocal_dni = v.dni
+            WHERE e1.fecha_examen = e2.fecha_examen
+    );
+        RETURN (vocales_duplicados>0);
+     END;
+    END VOCALES_DUPLICADOS;
+
 END PK_OCUPACION;
 /
 
