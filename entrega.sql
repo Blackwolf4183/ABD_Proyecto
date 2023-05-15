@@ -62,7 +62,7 @@ BEGIN
                 --DBMS_OUTPUT.PUT_LINE('rownum: ' || codigos.rownum);
                 --DBMS_OUTPUT.PUT_LINE('codigo_aula: ' || codigos.codigo || ' codigo_sede: ' || codigos.sede_codigo);
                 INSERT INTO EXAMEN VALUES(Fechas(i),codigos.codigo,codigos.sede_codigo);
-                -- Añadimos al mismo tiempo los registros de materia_examen
+                -- AÃ±adimos al mismo tiempo los registros de materia_examen
                 IF i = 1 THEN
                     INSERT INTO MATERIA_EXAMEN VALUES(Fechas(i),codigos.codigo,codigos.sede_codigo,'HisE');
                 ELSIF i = 2 THEN
@@ -122,20 +122,20 @@ END;
 -- Rellena asistencia
 -- Rellenar tabla asistencia
 -- Rellenar tabla asistencia
-CREATE OR REPLACE PROCEDURE RELLENAR_ASISTENCIA 
+create or replace PROCEDURE RELLENAR_ASISTENCIA 
 AS
     CURSOR ALUMNOS IS 
     SELECT * FROM MATRICULA;
-    
-    
+
+
     -- capacidad de las aulas para el examen
     capacidad_aulas NUMBER;
     asiste_aleatorio CHAR(1);
-    
+
     aula_codigo VARCHAR(50);
     aula_sede_codigo VARCHAR(50);
     fechayhora DATE;
-    
+
 BEGIN
     SELECT MIN(CAPACIDAD_EXAMEN) INTO capacidad_aulas FROM AULA;
 
@@ -146,40 +146,40 @@ BEGIN
             SELECT 'IngAcc' str FROM dual)
     LOOP
         FOR alumno IN ALUMNOS LOOP
-        
+
             IF alumno.MATERIA_CODIGO = asignatura.str THEN
                 asiste_aleatorio := CASE DBMS_RANDOM.value(1, 4)
                          WHEN 1 THEN 'N'
                          ELSE 'S'
                          END;
-    
-                -- añadimos a la asistencia cada alumno
+
+                -- aÃ±adimos a la asistencia cada alumno
                 -- tenemos que seleccionar de examen una, donde la suma de los alumnos que 
-                -- asisten ya ahí no sea ya igual a la capacidad de examen
-                
-                SELECT EXAMEN_AULA_CODIGO, EXAMEN_AULA_CODIGO1, EXAMEN_FECHAYHORA INTO aula_codigo,aula_sede_codigo, fechayhora
+                -- asisten ya ahÃ­ no sea ya igual a la capacidad de examen
+
+                SELECT EXAMEN_AULA_CODIGO, EXAMEN_SEDE_CODIGO, EXAMEN_FECHAYHORA INTO aula_codigo,aula_sede_codigo, fechayhora
                 FROM 
                 (
                     SELECT e.*, COALESCE(COUNT(a.examen_aula_codigo), 0) AS N 
                     FROM MATERIA_EXAMEN e
                     LEFT JOIN ASISTENCIA a ON a.EXAMEN_FECHAYHORA = e.EXAMEN_FECHAYHORA AND a.EXAMEN_AULA_CODIGO = e.EXAMEN_AULA_CODIGO
                     WHERE e.MATERIA_CODIGO=asignatura.str
-                    GROUP BY e.EXAMEN_FECHAYHORA, e.EXAMEN_AULA_CODIGO,e.EXAMEN_AULA_CODIGO1,e.MATERIA_CODIGO
+                    GROUP BY e.EXAMEN_FECHAYHORA, e.EXAMEN_AULA_CODIGO, e.EXAMEN_SEDE_CODIGO, e.MATERIA_CODIGO
                 )
-                
+
                 WHERE N < 1000  FETCH FIRST 1 ROW ONLY;
-                
-    
+
+
                 --DBMS_OUTPUT.PUT_LINE('alumno.ESTUDIANTE_DNI: ' || alumno.ESTUDIANTE_DNI || 'aula_codigo: ' || aula_codigo);
-      
+
                 INSERT INTO ASISTENCIA VALUES(asiste_aleatorio, asiste_aleatorio, alumno.ESTUDIANTE_DNI,
                                               asignatura.str,fechayhora,aula_codigo,aula_sede_codigo );
-                    
+
             END IF; 
-    
+
         END LOOP;
     END LOOP;
-    
+
 
 END;
 /
@@ -192,12 +192,12 @@ END;
 /
 
 
--- 1.Vistas de Ocupación
+-- 1.Vistas de OcupaciÃ³n
 /*
-1. Crear una vista V_OCUPACION_ASIGNADA que reúna las tablas de sedes, examen y
-asistencia y devuelva el código de sede, su nombre, código de aula, fecha de examen y
-número de estudiantes asignados a un examen, agrupando por dicha sede, su nombre,
-código de aula y fecha de examen.
+1. Crear una vista V_OCUPACION_ASIGNADA que reÃºna las tablas de sedes, examen y
+asistencia y devuelva el cÃ³digo de sede, su nombre, cÃ³digo de aula, fecha de examen y
+nÃºmero de estudiantes asignados a un examen, agrupando por dicha sede, su nombre,
+cÃ³digo de aula y fecha de examen.
 */
 
 CREATE OR REPLACE VIEW V_OCUPACION_ASIGNADA AS
@@ -208,10 +208,10 @@ INNER JOIN asistencia a ON e.aula_codigo = a.examen_aula_codigo
 GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;
 
 /*
-2. Crear una vista V_OCUPACION que re�na las tablas de sedes, examen y asistencia y
-devuelva el c�digo de sede, su nombre, c�digo de aula, fecha de examen y n�mero de
-estudiantes que han asistido a un examen (atributo ASISTE = �SI�), agrupando por dicha
-sede, su nombre, c�digo de aula y fecha de examen.
+2. Crear una vista V_OCUPACION que reï¿½na las tablas de sedes, examen y asistencia y
+devuelva el cï¿½digo de sede, su nombre, cï¿½digo de aula, fecha de examen y nï¿½mero de
+estudiantes que han asistido a un examen (atributo ASISTE = ï¿½SIï¿½), agrupando por dicha
+sede, su nombre, cï¿½digo de aula y fecha de examen.
 */
 
 CREATE OR REPLACE VIEW V_OCUPACION AS
@@ -223,9 +223,9 @@ WHERE a.asiste = 'S'
 GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;
 
 /*
-3. Crear una vista V_VIGILANTES que re�na las tablas de sedes, examen y vigilancia y
-devuelva el c�digo de sede, su nombre, c�digo de aula, fecha de examen y n�mero de
-vigilantes que han vigilado un examen, agrupando por dicha sede, su nombre, c�digo de
+3. Crear una vista V_VIGILANTES que reï¿½na las tablas de sedes, examen y vigilancia y
+devuelva el cï¿½digo de sede, su nombre, cï¿½digo de aula, fecha de examen y nï¿½mero de
+vigilantes que han vigilado un examen, agrupando por dicha sede, su nombre, cï¿½digo de
 aula y fecha de examen.
 */
 
@@ -250,24 +250,24 @@ END PK_OCUPACION;
 
 
 /*
-1. Implementar una funci�n denominada OCUPACION_MAXIMA que reciba como
-argumento el c�digo de sede y de aula y devuelva el n�mero m�ximo simult�neo de
+1. Implementar una funciï¿½n denominada OCUPACION_MAXIMA que reciba como
+argumento el cï¿½digo de sede y de aula y devuelva el nï¿½mero mï¿½ximo simultï¿½neo de
 personas que han estado presente en ella. Hay que tener en cuenta los diferentes
-ex�menes y adem�s que el n�mero de personas es igual al n�mero de estudiantes, m�s
+exï¿½menes y ademï¿½s que el nï¿½mero de personas es igual al nï¿½mero de estudiantes, mï¿½s
 los vocales presentes en ella.
-2. Implementar una funci�n denominada OCUPACION_OK que devuelva un booleano a
-TRUE si todos los ex�menes a�n no realizados tienen un n�mero de estudiantes
-asignados a un aula inferior o igual al atributo Capacidad_Examen y el n�mero total
+2. Implementar una funciï¿½n denominada OCUPACION_OK que devuelva un booleano a
+TRUE si todos los exï¿½menes aï¿½n no realizados tienen un nï¿½mero de estudiantes
+asignados a un aula inferior o igual al atributo Capacidad_Examen y el nï¿½mero total
 de personas (alumnos + vocales) no supera al atributo Capacidad.
-3. Implementar una funci�n denominada VOCAL_DUPLICADO que reciba como
-argumento el identificador de un vocal y devuelva TRUE si dicho vocal est� asignado a
-m�s de un examen en la misma franja horaria. Como es de esperar esto es algo que no
-deber�a ocurrir.
-4. Implementar una funci�n denominada VOCALES_DUPLICADOS que devuelva TRUE
-si alguno de los vocales est� asignado a m�s de un examen en la misma franja.
-5. Implementar una funci�n denominada VOCAL_RATIO que recibe un n�mero entero y
-que devuelva un booleano a TRUE si en todos los ex�menes a�n no realizados hay el
-n�mero indicado (o menos) de alumnos por cada vigilante.
+3. Implementar una funciï¿½n denominada VOCAL_DUPLICADO que reciba como
+argumento el identificador de un vocal y devuelva TRUE si dicho vocal estï¿½ asignado a
+mï¿½s de un examen en la misma franja horaria. Como es de esperar esto es algo que no
+deberï¿½a ocurrir.
+4. Implementar una funciï¿½n denominada VOCALES_DUPLICADOS que devuelva TRUE
+si alguno de los vocales estï¿½ asignado a mï¿½s de un examen en la misma franja.
+5. Implementar una funciï¿½n denominada VOCAL_RATIO que recibe un nï¿½mero entero y
+que devuelva un booleano a TRUE si en todos los exï¿½menes aï¿½n no realizados hay el
+nï¿½mero indicado (o menos) de alumnos por cada vigilante.
 
 */
 
@@ -300,8 +300,8 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
   FUNCTION OCUPACION_OK RETURN BOOLEAN IS 
   v_ocupacion NUMBER;
   BEGIN
-    -- Comprobar que para todos los ex�menes a�n no realizados,
-    -- el n�mero de estudiantes asignados a un aula es inferior o igual a Capacidad_Examen
+    -- Comprobar que para todos los exámenes aún no realizados,
+    -- el número de estudiantes asignados a un aula es inferior o igual a Capacidad_Examen
     FOR examen IN (SELECT *
                    FROM examen
                    WHERE fechayhora > SYSDATE)
@@ -316,7 +316,7 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
         END IF;
     END LOOP;
     
-    -- Comprobar que el n�mero total de personas no supera Capacidad
+    -- Comprobar que el número total de personas no supera Capacidad
     SELECT COUNT(*) INTO v_ocupacion
     FROM asistencia a
     JOIN examen e ON a.examen_fechayhora = e.fechayhora
@@ -369,14 +369,74 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
 END PK_OCUPACION;
 /
 
+
+--3
+/*
+1. Crear un paquete con 2 procedimientos PR_CREA_ESTUDIANTE y
+PR_CREA_VOCAL que reciban el identificador del individuo y que tenga dos
+argumentos de salida que corresponderán el primero al nombre del usuario creado en
+Oracle y el segundo a la contraseña generada (puedes utilizar la función STRING del
+paquete DBMS_RANDOM). Estos procedimientos además deberán asignar todos los
+roles, permisos que sean necesarios. No dudes en modificar el esquema de la base de
+datos si fuera necesario.
+*/
+
+CREATE OR REPLACE PACKAGE PK_CREACION_USUARIOS AS
+  PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN estudiante.dni%TYPE, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
+  PROCEDURE PR_CREA_VOCAL(p_identificador IN vocal.dni%type, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
+END PK_CREACION_USUARIOS;
+/
+
+CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
+  PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN estudiante.dni%TYPE, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2) IS
+    v_usuario VARCHAR2(50);
+    v_contrasena VARCHAR2(50);
+  BEGIN
+    -- Generar nombre de usuario y contraseña utilizando DBMS_RANDOM.STRING
+    v_usuario := 'E' || p_identificador;
+    v_contrasena := 'A' || DBMS_RANDOM.STRING('x', 8);
+    
+    -- Insertar el usuario y contraseña en la tabla usuarios
+    INSERT INTO estudiante (user_name, user_password) VALUES (v_usuario, v_contrasena);
+    
+    -- Asignar roles y permisos al usuario creado
+    EXECUTE IMMEDIATE 'CREATE USER ' || v_usuario || ' IDENTIFIED BY ' || v_contrasena;
+    --TODO: dar roles
+    
+    -- Asignar los valores generados a los argumentos de salida
+    p_nombre_usuario := v_usuario;
+    p_contrasena := v_contrasena;
+  END PR_CREA_ESTUDIANTE;
+  
+  PROCEDURE PR_CREA_VOCAL(p_identificador IN vocal.dni%type, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2) IS
+    v_usuario VARCHAR2(50);
+    v_contrasena VARCHAR2(50);
+  BEGIN
+    -- Generar nombre de usuario y contraseña utilizando DBMS_RANDOM.STRING
+    v_usuario := 'V' || p_identificador;
+    v_contrasena := 'A' || DBMS_RANDOM.STRING('x', 8);
+    
+    INSERT INTO vocal (user_name, user_password) VALUES (v_usuario, v_contrasena);
+    
+    -- Asignar roles y permisos al usuario creado
+    EXECUTE IMMEDIATE 'CREATE USER ' || v_usuario || ' IDENTIFIED BY ' || v_contrasena;
+   
+    
+    -- Asignar los valores generados a los argumentos de salida
+    p_nombre_usuario := v_usuario;
+    p_contrasena := v_contrasena;
+  END PR_CREA_VOCAL;
+END PK_CREACION_USUARIOS;
+/
+
 --4.
 --Queremos implementar (mediante un trigger denominado TR_BORRA_AULA) el
 --borrado de un aula (mediante una sentencia DELETE sobre la tabla AULA) que cumpla
 --las siguientes condiciones:
 --a. El borrado de un aula no es posible si ya se ha realizado un examen, o bien si
---hay planificado un examen antes de las próximas 48 horas.
---b. Si no se ha realizado examen ni hay planificado uno en las próximas 48 horas el
---borrado del aula implica el borrado de los exámenes planificados en la misma.
+--hay planificado un examen antes de las prÃ³ximas 48 horas.
+--b. Si no se ha realizado examen ni hay planificado uno en las prÃ³ximas 48 horas el
+--borrado del aula implica el borrado de los exÃ¡menes planificados en la misma.
 
 
 
@@ -393,7 +453,7 @@ BEGIN
     WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA IS NOT NULL;
     
     IF v_num_examenes > 0 THEN
-        RAISE_APPLICATION_ERROR(-20001, 'No se puede borrar el aula porque ya se han realizado exámenes en la misma.');
+        RAISE_APPLICATION_ERROR(-20001, 'No se puede borrar el aula porque ya se han realizado exÃ¡menes en la misma.');
     END IF;
     
     -- Comprobamos si se va a realizar algun examen en el aula en las proximas 48 horas
@@ -402,7 +462,7 @@ BEGIN
     WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA BETWEEN SYSDATE AND SYSDATE + 2;
     
     IF v_num_examenes > 0 THEN
-        RAISE_APPLICATION_ERROR(-20002, 'No se puede borrar el aula porque hay exámenes planificados en las próximas 48 horas.');
+        RAISE_APPLICATION_ERROR(-20002, 'No se puede borrar el aula porque hay exÃ¡menes planificados en las prÃ³ximas 48 horas.');
     END IF;
     
     -- Como resultado, todos los examenes que esten planificados para dicha aula se eliminan de la tabla "EXAMEN"
