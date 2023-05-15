@@ -177,33 +177,64 @@ CREATE OR REPLACE PROCEDURE PR_INSERTA_MATERIAS (
 
   v_codigo_materia VARCHAR2(100);
 BEGIN
+
   FOR nombre_materia IN c_materias LOOP
+    BEGIN
+      SELECT CODIGO
+      INTO v_codigo_materia
+      FROM MATERIA
+      WHERE NOMBRE = nombre_materia.materia;
 
-    SELECT CODIGO
-    INTO v_codigo_materia
-    FROM MATERIA
-    WHERE NOMBRE = nombre_materia.materia;
+      -- DBMS_OUTPUT.PUT_LINE('PESTDNI: ' || PESTDNI || ', v_codigo_materia: ' || v_codigo_materia);
 
-    --DBMS_OUTPUT.PUT_LINE('PESTDNI: ' || PESTDNI || ', v_codigo_materia: ' || v_codigo_materia);
+      INSERT INTO MATRICULA (ESTUDIANTE_DNI, MATERIA_CODIGO)
+      SELECT PESTDNI, v_codigo_materia FROM DUAL; 
 
-    INSERT INTO MATRICULA (ESTUDIANTE_DNI, MATERIA_CODIGO)
-    SELECT PESTDNI, v_codigo_materia FROM DUAL; 
-
-    COMMIT;
+      COMMIT;
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        -- Manejo de excepción cuando no se encuentra el código de materia
+        DBMS_OUTPUT.PUT_LINE('No se encontró el código de materia para: ' || nombre_materia.materia);
+        ROLLBACK;
+      WHEN OTHERS THEN
+        -- Manejo de excepción para otros errores
+        DBMS_OUTPUT.PUT_LINE('Ocurrió un error al procesar la materia: ' || nombre_materia.materia);
+        ROLLBACK;
+    END;
   END LOOP;
+  
+  EXCEPTION
+    WHEN OTHERS THEN
+      -- Manejo de excepción para errores generales
+      DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+      ROLLBACK;
 END;
 /
+
 
 CREATE OR REPLACE PROCEDURE PR_MATRICULA_ESTUDIANTES AS
     CURSOR c_estudiantes IS
         SELECT DNI,DETALLE FROM V_ESTUDIANTES;
 BEGIN
     FOR estudiante IN c_estudiantes LOOP
-        PR_INSERTA_MATERIAS(estudiante.DNI, estudiante.DETALLE);
-    COMMIT;
+        BEGIN
+            PR_INSERTA_MATERIAS(estudiante.DNI, estudiante.DETALLE);
+            COMMIT;
+        EXCEPTION
+            WHEN OTHERS THEN
+                -- Manejo de excepción para errores generales
+                DBMS_OUTPUT.PUT_LINE('Ocurrió un error al procesar el estudiante con DNI: ' || estudiante.DNI);
+                ROLLBACK;
+        END;
     END LOOP;
+EXCEPTION
+    WHEN OTHERS THEN
+        -- Manejo de excepción para errores generales
+        DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+        ROLLBACK;
 END;
 /
+
 
 --2)
 CREATE OR REPLACE PROCEDURE PR_RELLENA_AULAS (PNUMAULAS NUMBER,
@@ -211,31 +242,64 @@ CREATE OR REPLACE PROCEDURE PR_RELLENA_AULAS (PNUMAULAS NUMBER,
     
 BEGIN
   FOR i IN (SELECT DISTINCT CODIGO FROM SEDE) LOOP
-    FOR j IN 1..PNUMAULAS LOOP
-        --DBMS_OUTPUT.PUT_LINE('PCAPACIDAD: ' || PCAPACIDAD || ', PNUMAULAS: ' || PNUMAULAS || 'i: '||i||'j: '||j);
-      INSERT INTO AULA (CODIGO, SEDE_CODIGO, CAPACIDAD, CAPACIDAD_EXAMEN)
-      VALUES ('SEDE'||i.CODIGO||'AULA'||j, i.CODIGO, PCAPACIDAD, (PCAPACIDAD/2));
+    BEGIN
+      FOR j IN 1..PNUMAULAS LOOP
+        --DBMS_OUTPUT.PUT_LINE('PCAPACIDAD: ' || PCAPACIDAD || ', PNUMAULAS: ' || PNUMAULAS || 'i: '||i.CODIGO||'j: '||j);
+        INSERT INTO AULA (CODIGO, SEDE_CODIGO, CAPACIDAD, CAPACIDAD_EXAMEN)
+        VALUES ('SEDE'||i.CODIGO||'AULA'||j, i.CODIGO, PCAPACIDAD, (PCAPACIDAD/2));
+      END LOOP;
       
-    END LOOP;
-    commit;
+      COMMIT; -- Commit después de cada iteración del bucle interno
+    EXCEPTION
+      WHEN OTHERS THEN
+        -- Manejo de excepción para errores generales
+        DBMS_OUTPUT.PUT_LINE('Ocurrió un error al crear aulas para la sede: ' || i.CODIGO);
+        ROLLBACK;
+    END;
   END LOOP;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Manejo de excepción para errores generales
+    DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+    ROLLBACK;
 END;
 /
+
 
 CREATE OR REPLACE PROCEDURE PR_BORRA_AULA_SEDE (PCODIGOSEDE SEDE.CODIGO%TYPE) AS
 BEGIN
   DELETE FROM AULA
   WHERE SEDE_CODIGO = PCODIGOSEDE;
+  COMMIT;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Manejo de excepción para errores generales
+    DBMS_OUTPUT.PUT_LINE('Ocurrió un error al borrar las aulas de la sede: ' || PCODIGOSEDE);
+    ROLLBACK;
 END;
 /
 
+
 CREATE OR REPLACE PROCEDURE PR_BORRA_AULAS AS
 BEGIN 
-FOR i IN (SELECT DISTINCT SEDE_CODIGO FROM AULA) LOOP
-    PR_BORRA_AULA_SEDE(i.SEDE_CODIGO);
-END LOOP;
+  FOR i IN (SELECT DISTINCT SEDE_CODIGO FROM AULA) LOOP
+    BEGIN
+      PR_BORRA_AULA_SEDE(i.SEDE_CODIGO);
+    EXCEPTION
+      WHEN OTHERS THEN
+        -- Manejo de excepción para errores generales
+        DBMS_OUTPUT.PUT_LINE('Ocurrió un error al borrar las aulas de la sede: ' || i.SEDE_CODIGO);
+        ROLLBACK;
+    END;
+  END LOOP;
+EXCEPTION
+  WHEN OTHERS THEN
+    -- Manejo de excepción para errores generales
+    DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+    ROLLBACK;
 END;
 /
+
 
 
 -- Para borrar aulas
@@ -246,7 +310,7 @@ END;
 
 -- Para rellenar aulas 
 BEGIN
-PR_RELLENA_AULAS(20,80);
+PR_RELLENA_AULAS(10,500);
 END;
 /
 

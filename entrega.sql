@@ -382,6 +382,16 @@ paquete DBMS_RANDOM). Estos procedimientos además deberán asignar todos los
 roles, permisos que sean necesarios. No dudes en modificar el esquema de la base de
 datos si fuera necesario.
 */
+--Añadimos los campos necesarios a estudiante
+ALTER TABLE ESTUDIANTE
+ADD user_name VARCHAR2(50)
+ADD user_password VARCHAR2(50);
+
+-- Añado las columnas necesarias
+ALTER TABLE vocal
+ADD user_name VARCHAR2(50)
+ADD user_password VARCHAR2(50);
+
 
 CREATE OR REPLACE PACKAGE PK_CREACION_USUARIOS AS
   PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN VARCHAR2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
@@ -412,6 +422,11 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     -- Asignar los valores generados a los argumentos de salida
     p_nombre_usuario := v_usuario;
     p_contrasena := v_contrasena;
+    EXCEPTION
+    WHEN OTHERS THEN
+    -- Manejo de excepción para errores generales
+    DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+    ROLLBACK; -- Deshacer todos los cambios realizados en caso de un error general
   END PR_CREA_ESTUDIANTE;
   
   PROCEDURE PR_CREA_VOCAL(p_identificador IN VARCHAR2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2) IS
@@ -432,7 +447,13 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     -- Asignar los valores generados a los argumentos de salida
     p_nombre_usuario := v_usuario;
     p_contrasena := v_contrasena;
+    EXCEPTION
+  WHEN OTHERS THEN
+    -- Manejo de excepción para errores generales
+    DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+    ROLLBACK; -- Deshacer todos los cambios realizados en caso de un error general
   END PR_CREA_VOCAL;
+  
 END PK_CREACION_USUARIOS;
 /
 
@@ -452,7 +473,7 @@ END;
 
 
 
-- PROCEDIMIENTO PARA RELLENAR DE FORMA ALEATORIA LOS CARGOS DE UN VOCAL
+-- PROCEDIMIENTO PARA RELLENAR DE FORMA ALEATORIA LOS CARGOS DE UN VOCAL
 CREATE OR REPLACE PROCEDURE RELLENA_CARGOS_VOCAL AS
     CURSOR vocales IS 
     SELECT * FROM VOCAL;
