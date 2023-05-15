@@ -382,12 +382,13 @@ datos si fuera necesario.
 */
 
 CREATE OR REPLACE PACKAGE PK_CREACION_USUARIOS AS
-  PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN varchar2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
-  PROCEDURE PR_CREA_VOCAL(p_identificador IN varchar2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
+  PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN VARCHAR2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
+  PROCEDURE PR_CREA_VOCAL(p_identificador IN VARCHAR2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
 END PK_CREACION_USUARIOS;
 /
 
 CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
+
   PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN VARCHAR2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2) IS
     v_usuario VARCHAR2(50);
     v_contrasena VARCHAR2(50);
@@ -396,12 +397,15 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     v_usuario := 'E' || p_identificador;
     v_contrasena := 'A' || DBMS_RANDOM.STRING('x', 8);
     
+    --DBMS_OUTPUT.PUT_LINE(v_usuario || ' --- ' || v_contrasena);
     -- Insertar el usuario y contraseña en la tabla usuarios
-    INSERT INTO estudiante (user_name, user_password) VALUES (v_usuario, v_contrasena);
+    UPDATE estudiante SET user_name = v_usuario, user_password = v_contrasena
+    WHERE DNI = p_identificador;
     
     -- Asignar roles y permisos al usuario creado
     EXECUTE IMMEDIATE 'CREATE USER ' || v_usuario || ' IDENTIFIED BY ' || v_contrasena;
     --TODO: dar roles
+    --EXECUTE IMMEDIATE 'GRANT SELECT ON ASIGNACION_AULA_ESTUDIANTE TO ' || v_usuario || ' WHERE ESTUDIANTE_DNI =' || p_identificador;
     
     -- Asignar los valores generados a los argumentos de salida
     p_nombre_usuario := v_usuario;
@@ -416,7 +420,8 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     v_usuario := 'V' || p_identificador;
     v_contrasena := 'A' || DBMS_RANDOM.STRING('x', 8);
     
-    INSERT INTO vocal (user_name, user_password) VALUES (v_usuario, v_contrasena);
+    UPDATE vocal SET user_name =v_usuario , user_password = v_contrasena
+    WHERE DNI = p_identificador;
     
     -- Asignar roles y permisos al usuario creado
     EXECUTE IMMEDIATE 'CREATE USER ' || v_usuario || ' IDENTIFIED BY ' || v_contrasena;
@@ -427,6 +432,20 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     p_contrasena := v_contrasena;
   END PR_CREA_VOCAL;
 END PK_CREACION_USUARIOS;
+/
+
+
+DECLARE
+  v_nombre_usuario VARCHAR2(50);
+  v_contrasena VARCHAR2(50);
+BEGIN
+  PK_CREACION_USUARIOS.PR_CREA_VOCAL('95115697E', v_nombre_usuario, v_contrasena);
+  -- Puedes reemplazar 'identificador_estudiante' con el valor deseado para el parámetro p_identificador.
+  
+  -- Imprime los valores generados para el nombre de usuario y la contraseña
+  DBMS_OUTPUT.PUT_LINE('Nombre de usuario: ' || v_nombre_usuario);
+  DBMS_OUTPUT.PUT_LINE('Contraseña: ' || v_contrasena);
+END;
 /
 
 --4.
