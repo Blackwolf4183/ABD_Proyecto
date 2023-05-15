@@ -470,3 +470,166 @@ BEGIN
     WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA >= SYSDATE;
 END;
 /
+
+--5
+--1.Implementar un procedimiento denominado DESPISTE que reubique a un estudiante
+--que por error se ha presentado a un examen en una sede que no es la que le
+--corresponde por su Centro. El procedimiento recibe como argumento un identificador
+--de estudiante (DNI) y un identificador de examen (los atributos necesarios, por ejemplo,
+--Fecha y hora, Aula y sede).
+--a. Este procedimiento únicamente funcionará si queda menos de una hora para el
+--comienzo del primer examen al que el alumno se tenga que presentar. Para ello
+--se obtiene la primera hora de la tabla ASISTE que corresponda con el DNI del
+--alumno y se comprueba la diferencia entre la fecha programada y la hora del
+--sistema. Se comprueba si falta menos de una hora. Si no es así, el procedimiento
+--devolverá una excepción. Recuerda que el tipo DATE almacena tanto la fecha
+--como la hora. Probar con ASISTE.FechayHora between SYSDATE AND
+--SYSDATE + 1/24
+--b. Si el apartado anterior no ha dado error, el procedimiento debe permitir la
+--asistencia del alumno en la sede nueva. Es decir, debe modificar la fila de la tabla
+--ASISTE con el identificador del estudiante, la fecha, el código de la nueva sede
+--y el código del aula pasada como parámetro.
+--c. El procedimiento hará lo mismo con el resto de los exámenes de la fecha del
+--sistema, para que el estudiante no tenga que moverse de sede. Para ello hay
+--que recorrer el resto de los exámenes a los que el alumno tiene que presentarse
+--ese día y buscarle un aula libre. Para cada examen se modifica la tabla asiste con
+--los nuevos datos (aula y sede). La diferencia con el apartado anterior es que en
+--el anterior el aula nos la pasan como parámetro, pero en este hay que buscarle
+--un aula disponible. Los exámenes de otras fechas no se modifican.
+
+CREATE OR REPLACE PROCEDURE DESPISTE (dni IN VARCHAR2, examen_id IN NUMBER, nueva_sede_cod IN VARCHAR2, nueva_aula_cod IN VARCHAR2)
+AS
+  fecha_hora DATE;
+  fecha_actual DATE;
+  examen_fecha_hora DATE;
+  examen_aula_cod VARCHAR2(50);
+  examen_sede_cod VARCHAR2(50);
+  examenes_curso SYS_REFCURSOR;
+BEGIN
+  -- Comprobar que falta menos de una hora para el primer examen del estudiante
+  SELECT MIN(EXAMEN_FECHAYHORA)
+  INTO fecha_hora
+  FROM ASISTENCIA
+  WHERE ESTUDIANTE_DNI = dni;
+  
+  IF fecha_hora IS NULL THEN
+    RAISE_APPLICATION_ERROR(-20001, 'El estudiante no está programado para ningún examen');
+  END IF;
+  
+  fecha_actual := SYSDATE;
+  
+  IF fecha_hora - fecha_actual > 1/24 THEN
+    RAISE_APPLICATION_ERROR(-20002, 'Falta más de una hora para el primer examen del estudiante');
+  END IF;
+  
+  -- Cambiar el aula y la sede del primer examen del estudiante
+  UPDATE ASISTENCIA
+  SET EXAMEN_AULA_CODIGO = nueva_aula_cod,
+      EXAMEN_SEDE_CODIGO = nueva_sede_cod
+  WHERE ESTUDIANTE_DNI = dni
+  AND EXAMEN_FECHAYHORA = fecha_hora;
+  
+  -- Obtener los demás exámenes del estudiante para el día actual
+  OPEN examenes_curso FOR
+    SELECT EXAMEN_FECHAYHORA, EXAMEN_AULA_CODIGO, EXAMEN_SEDE_CODIGO
+    FROM ASISTENCIA
+    WHERE ESTUDIANTE_DNI = dni
+    AND TRUNC(EXAMEN_FECHAYHORA) = TRUNC(fecha_actual)
+    AND EXAMEN_FECHAYHORA > fecha_hora
+    ORDER BY EXAMEN_FECHAYHORA ASC;
+  
+  LOOP
+    -- Salir del bucle si no hay más exámenes para el día actual
+    FETCH examenes_curso INTO examen_fecha_hora, examen_aula_cod, examen_sede_cod;
+    EXIT WHEN examenes_curso%NOTFOUND;
+    
+    -- Buscar un aula disponible para el examen
+    SELECT CODIGO
+    INTO examen_aula_cod
+    FROM AULA
+    WHERE Codigo NOT IN (SELECT EXAMEN_AULA_CODIGO FROM ASISTENCIA WHERE EXAMEN_FECHAYHORA = examen_fecha_hora AND EXAMEN_SEDE_CODIGO = examen_sede_cod)
+    AND SEDE_CODIGO = nueva_sede_cod
+    AND ROWNUM = 1;
+    
+    -- Cambiar el aula y la sede del examen
+    UPDATE ASISTENCIA
+    SET EXAMEN_AULA_CODIGO = examen_aula_cod,
+        EXAMEN_SEDE_CODIGO = nueva_sede_cod
+    WHERE ESTUDIANTE_DNI = dni
+    AND EXAMEN_FECHAYHORA = examen_fecha_hora;
+  END LOOP;
+  
+  CLOSE examenes_curso;
+  
+  COMMIT;
+END;
+/
+
+--2. Implementar un procedimiento denominado MIGRAR_CENTRO, que recibe el
+--identificador de un centro y el identificador de una sede origen y destino.
+--a. El procedimiento migrará todos sus alumnos de exámenes de la sede origen a
+--la sede destino.
+--b. El procedimiento repartirá a los alumnos en las aulas disponibles del nuevo
+--centro sin superar nunca la Capacidad_Examen de cada aula.
+--c. Si no es posible realizar dicha asignación el procedimiento deberá lanzar una
+--excepción.
+--d. En la implementación de este procedimiento el alumno recibirá tres posibles
+--calificaciones según cómo se implemente (de menos puntuación a más
+--puntuación):
+--i. Más baja: Como procedimiento y si la asignación falla deja todo a medio
+--hacer.
+--ii. Media: Como procedimiento y si la asignación no es posible deja todo
+--como estaba originalmente.
+--iii. Más alta: Como trigger al hacer un UPDATE del campo de la sede de un
+--centro (si el trigger falla todo debe quedar como estaba originalmente).
+
+CREATE OR REPLACE PROCEDURE MIGRAR_CENTRO (centro_id_origen IN NUMBER, sede_id_origen IN NUMBER, sede_id_destino IN NUMBER)
+AS
+  capacidad_examen_max NUMBER;
+  aula_codigo VARCHAR2(50);
+  alumno_dni VARCHAR2(9);
+  num_alumnos NUMBER;
+  capacidad_aula NUMBER;
+BEGIN
+  -- Obtener la capacidad máxima de examen de las aulas en la sede destino
+  SELECT CAPACIDAD_EXAMEN INTO capacidad_examen_max
+  FROM AULA
+  WHERE SEDE_CODIGO = sede_id_destino
+  AND ROWNUM = 1;
+  
+  IF capacidad_examen_max IS NULL THEN
+    RAISE_APPLICATION_ERROR(-20001, 'No se encontraron aulas disponibles en la sede destino');
+  END IF;
+  
+  -- Migrar los alumnos de exámenes de la sede origen a la sede destino
+  UPDATE ASISTENCIA
+  SET EXAMEN_SEDE_CODIGO = sede_id_destino
+  WHERE EXAMEN_SEDE_CODIGO = sede_id_origen;
+  
+  -- Repartir a los alumnos en las aulas disponibles del nuevo centro sin superar la capacidad de examen de cada aula
+  FOR aula IN (SELECT CODIGO, CAPACIDAD_EXAMEN FROM AULA WHERE SEDE_CODIGO = sede_id_destino)
+  LOOP
+    aula_codigo := aula.CODIGO;
+    capacidad_aula := aula.CAPACIDAD_EXAMEN;
+    
+    -- Contar el número de alumnos asignados al aula
+    SELECT COUNT(*) INTO num_alumnos
+    FROM ASISTENCIA
+    WHERE EXAMEN_SEDE_CODIGO = sede_id_destino
+    AND EXAMEN_AULA_CODIGO = aula_codigo;
+    
+    -- Asignar alumnos al aula si hay capacidad disponible
+    IF num_alumnos < capacidad_aula THEN
+      UPDATE ASISTENCIA
+      SET EXAMEN_AULA_CODIGO = aula_codigo
+      WHERE EXAMEN_SEDE_CODIGO = sede_id_destino
+      AND EXAMEN_AULA_CODIGO IS NULL
+      AND ROWNUM <= capacidad_aula - num_alumnos;
+    ELSE
+      RAISE_APPLICATION_ERROR(-20002, 'No hay capacidad suficiente en las aulas disponibles del nuevo centro');
+    END IF;
+  END LOOP;
+  
+  COMMIT;
+END;
+/
