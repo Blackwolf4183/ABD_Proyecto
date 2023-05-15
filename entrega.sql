@@ -313,7 +313,7 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
         JOIN examen e ON a.examen_fechayhora = e.fechayhora
         JOIN aula au ON e.aula_codigo = au.codigo;
         
-        IF v_ocupacion > au.capacidad_examen THEN
+        IF v_ocupacion > aula.capacidad_examen THEN
             RETURN FALSE;
         END IF;
     END LOOP;
@@ -325,7 +325,7 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
     JOIN aula au ON e.aula_codigo = au.codigo
     JOIN sede s ON au.sede_codigo = s.codigo;
     
-    IF v_ocupacion > au.capacidad THEN
+    IF v_ocupacion > aula.capacidad THEN
         RETURN FALSE;
     END IF;
 
@@ -334,7 +334,7 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
     
     --3
     FUNCTION VOCAL_DUPLICADO(p_cod_vocal IN vocal.dni%TYPE) RETURN BOOLEAN IS
-    vocal_duplicado BOOLEAN :=FALSE;
+    vocal_duplicado NUMBER;
     BEGIN
         SELECT COUNT(*) INTO vocal_duplicado
         FROM (
@@ -344,15 +344,15 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
             JOIN vigilancia ve1 ON e1.fechayhora = ve1.examen_fechayhora
             JOIN vigilancia ve2 ON e2.fechayhora = ve2.examen_fechayhora
             JOIN vocal v ON ve1.vocal_dni = v.dni AND ve2.vocal_dni = v.dni
-            WHERE e1.fecha_examen = e2.fecha_examen
+            WHERE e1.fechayhora = e2.fechayhora
             AND v.dni = p_cod_vocal
     );
-    RETURN (vocal_duplicado>0);
+    RETURN (vocal_duplicado>1);
     END VOCAL_DUPLICADO;
     
     --4
     FUNCTION VOCALES_DUPLICADOS RETURN BOOLEAN IS
-        vocales_duplicados BOOLEAN :=FALSE;
+        vocales_duplicados NUMBER;
         BEGIN
             SELECT COUNT(*) INTO vocales_duplicados
         FROM (
@@ -362,15 +362,54 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
             JOIN vigilancia ve1 ON e1.fechayhora = ve1.examen_fechayhora
             JOIN vigilancia ve2 ON e2.fechayhora = ve2.examen_fechayhora
             JOIN vocal v ON ve1.vocal_dni = v.dni AND ve2.vocal_dni = v.dni
-            WHERE e1.fecha_examen = e2.fecha_examen
+            WHERE e1.FECHAYHORA = e2.FECHAYHORA
     );
-        RETURN (vocales_duplicados>0);
-     END;
+        RETURN (vocales_duplicados>1);
     END VOCALES_DUPLICADOS;
-
+    
+  FUNCTION VOCAL_RATIO(p_ratio IN NUMBER) RETURN BOOLEAN IS
+    v_examen_no_realizado NUMBER;
+    v_total_alumnos NUMBER;
+    v_total_vigilantes NUMBER;
+    v_ratio NUMBER;
+  BEGIN
+    -- Obtener la cantidad de exámenes aún no realizados
+    SELECT COUNT(*)
+    INTO v_examen_no_realizado
+    FROM examen
+    WHERE FECHAYHORA>sysdate;
+    
+    -- Verificar si existen exámenes no realizados
+    IF v_examen_no_realizado > 0 THEN
+      -- Calcular el número total de alumnos y vigilantes en los exámenes no realizados
+      SELECT COUNT(DISTINCT v.VOCAL_DNI)
+      INTO v_total_vigilantes
+      FROM examen e
+      JOIN vigilancia v ON e.fechayhora = v.examen_fechayhora
+      WHERE e.FECHAYHORA<sysdate;
+      
+      SELECT COUNT(DISTINCT v.VOCAL_DNI)
+      INTO v_total_alumnos
+      FROM examen e
+      JOIN asistencia a ON e.fechayhora = a.examen_fechayhora
+      WHERE e.FECHAYHORA<sysdate;
+      
+      -- Calcular el ratio de alumnos por vigilante
+      v_ratio := v_total_alumnos / v_total_vigilantes;
+      
+      -- Verificar si el ratio cumple con el número indicado (o menos)
+      IF v_ratio <= p_ratio THEN
+        RETURN TRUE; -- El ratio es válido
+      ELSE
+        RETURN FALSE; -- El ratio no es válido
+      END IF;
+    ELSE
+      RETURN TRUE; -- No hay exámenes no realizados, se considera válido
+    END IF;
+  END VOCAL_RATIO;
+  
 END PK_OCUPACION;
 /
-
 
 --3
 /*
