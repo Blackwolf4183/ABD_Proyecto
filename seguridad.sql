@@ -118,3 +118,82 @@ FROM VIGILANCIA;
 
 -- TODO: Aplicar VPD que me pasó Pere por discord lo último de todo para no tener
 -- problemas al crear los usuarios que me faltan por crear.
+
+
+-- PROCEDIMIENTO PARA RELLENAR DE FORMA ALEATORIA LOS CARGOS DE UN VOCAL
+CREATE OR REPLACE PROCEDURE RELLENA_CARGOS_VOCAL AS
+    CURSOR vocales IS 
+    SELECT * FROM VOCAL;
+    cargo_vocal VARCHAR(20);
+    materia_codigo_vocal VARCHAR(50);
+BEGIN
+    FOR vocal IN vocales LOOP
+        -- Poner usuarios y contraseñas
+        UPDATE VOCAL
+        SET user_name = 'V' || vocal.DNI,
+            user_password = 'A' || DBMS_RANDOM.STRING('x', 8)
+        WHERE DNI = vocal.DNI;
+        
+        -- Generar valores aleatorios para cargo
+        CASE ROUND(DBMS_RANDOM.VALUE(1, 3))
+            WHEN 1 THEN cargo_vocal := 'R_SEDE';
+            WHEN 2 THEN cargo_vocal := 'R_AULA';
+            WHEN 3 THEN cargo_vocal := 'VIGILANTE';
+        END CASE;
+        
+        -- Generar valores aleatorios para materia_codigo
+        CASE ROUND(DBMS_RANDOM.VALUE(1, 3))
+            WHEN 1 THEN materia_codigo_vocal := 'HisE';
+            WHEN 2 THEN materia_codigo_vocal := 'Len';
+            WHEN 3 THEN materia_codigo_vocal := 'IngAcc';
+        END CASE;
+        
+        
+        DBMS_OUTPUT.PUT_LINE(materia_codigo_vocal);
+        
+        -- Actualizar el registro del vocal con los valores generados
+        UPDATE VOCAL
+        SET cargo = cargo_vocal,
+            materia_codigo =  materia_codigo_vocal
+        WHERE DNI = vocal.DNI;
+        
+        
+        
+    END LOOP;
+    
+    commit;
+END;
+/
+
+
+BEGIN
+    RELLENA_CARGOS_VOCAL;
+END;
+/
+
+
+--VISTAS PARA ROLES
+CREATE VIEW V_RESPONSABLE_SEDE_AULAS AS
+SELECT * FROM AULA;
+
+CREATE VIEW V_RESPONSABLE_SEDE_SEDES AS
+SELECT * FROM SEDE;
+
+CREATE VIEW V_RESPONSABLE_SEDE_ASISTENCIA AS
+SELECT * FROM ASISTENCIA;
+
+CREATE VIEW V_RESPONSABLE_SEDE_ASIGNACION_EXAMENES AS
+SELECT * FROM MATERIA_EXAMEN;
+-- 
+
+CREATE OR REPLACE VIEW V_ASIGNACION_VIGILANTES AS
+SELECT vi.*, vo.DNI, vo.NOMBRE, vo.APELLIDOS, vo.MATERIA_CODIGO FROM VIGILANCIA vi
+JOIN VOCAL vo ON VOCAL_DNI = DNI
+WHERE CARGO = 'VIGILANTE' OR CARGO = 'R_AULA';
+
+--
+
+--RESPONSABLE DE AULA
+-- ACTUALIZACIÓN DE ESTUDIANTES EN EL AULA
+CREATE OR REPLACE VIEW V_CONTADOR_ESTUDIANTES_EXAMEN AS
+SELECT * FROM EXAMEN;
