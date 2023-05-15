@@ -382,13 +382,13 @@ datos si fuera necesario.
 */
 
 CREATE OR REPLACE PACKAGE PK_CREACION_USUARIOS AS
-  PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN estudiante.dni%TYPE, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
-  PROCEDURE PR_CREA_VOCAL(p_identificador IN vocal.dni%type, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
+  PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN varchar2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
+  PROCEDURE PR_CREA_VOCAL(p_identificador IN varchar2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2);
 END PK_CREACION_USUARIOS;
 /
 
 CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
-  PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN estudiante.dni%TYPE, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2) IS
+  PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN VARCHAR2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2) IS
     v_usuario VARCHAR2(50);
     v_contrasena VARCHAR2(50);
   BEGIN
@@ -408,7 +408,7 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     p_contrasena := v_contrasena;
   END PR_CREA_ESTUDIANTE;
   
-  PROCEDURE PR_CREA_VOCAL(p_identificador IN vocal.dni%type, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2) IS
+  PROCEDURE PR_CREA_VOCAL(p_identificador IN VARCHAR2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2) IS
     v_usuario VARCHAR2(50);
     v_contrasena VARCHAR2(50);
   BEGIN
