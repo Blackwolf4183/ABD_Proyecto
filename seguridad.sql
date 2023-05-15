@@ -1,5 +1,11 @@
 -- ######################### USUARIO PARA TODOS LOS ESTUDIANTES
 
+ALTER TABLE ESTUDIANTE
+ADD user_name VARCHAR2(50)
+ADD user_password VARCHAR2(50);
+
+create user E88126719U identified by AGOUO6Z0F;
+
 CREATE OR REPLACE PROCEDURE RELLENA_USUARIO_ESTUDIANTES
 AS
     CURSOR estudiantes IS
@@ -37,7 +43,12 @@ END;
 /
 
 -- TODO: DAR ROLES
--- COPIAR Y PEGAR PARA EL RESTO DE TABLAS EN LAS QUE HAGA FALTA CREAR USUARIO
+
+-- VISTA ESTUDIANTE PARA VER SU ASIGNACIÓN DE AULA
+
+CREATE OR REPLACE VIEW ASIGNACION_AULA_ESTUDIANTE AS 
+SELECT ESTUDIANTE_DNI, MATERIA_CODIGO, EXAMEN_FECHAYHORA, EXAMEN_AULA_CODIGO, EXAMEN_SEDE_CODIGO
+FROM ASISTENCIA;
 
 -- ######################### USUARIO ADMINISTRADOR SE LLAMA PEVAU
 
@@ -79,7 +90,7 @@ BEGIN
 END;
 /
 
--- Creo los usuarios correspondientes
+-- Creo los usuarios correspondientes con los usuarios y contraseñas ya guardados
 
 DECLARE 
     CURSOR vigilantes IS
@@ -90,13 +101,17 @@ BEGIN
     END LOOP;
 END;
 /
--- No se me ha creado uno para todos los vocales porque se me ha bugeado en medio pero
--- me ha creado unos 40 vocales
 
 -- TODO: DAR ROLES 
 
--- ######################### USUARIO RESPONSABLE DE AULA?
--- ######################### USUARIO RESPONSABLE DE SEDE?
+-- VISTA VIGILANTE PARA VER SU ASIGNACIÓN DE AULA
+
+CREATE OR REPLACE VIEW ASIGNACION_AULA_VIGILANTE AS 
+SELECT *
+FROM VIGILANCIA;
+
+-- ######################### USUARIO RESPONSABLE DE AULA?????
+-- ######################### USUARIO RESPONSABLE DE SEDE?????
 
 -- TODO: Eliminar indice sobre telefono y cifrar la columna al crear la tabla, ya tendremos
 -- la columna cifrada requerida
