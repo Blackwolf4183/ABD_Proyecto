@@ -1,3 +1,5 @@
+-- ######################### USUARIO PARA TODOS LOS ESTUDIANTES
+
 CREATE OR REPLACE PROCEDURE RELLENA_USUARIO_ESTUDIANTES
 AS
     CURSOR estudiantes IS
@@ -34,4 +36,70 @@ BEGIN
 END;
 /
 
+-- TODO: DAR ROLES
 -- COPIAR Y PEGAR PARA EL RESTO DE TABLAS EN LAS QUE HAGA FALTA CREAR USUARIO
+
+-- ######################### USUARIO ADMINISTRADOR SE LLAMA PEVAU
+
+-- ######################### USUARIO PARA PERSONAL DE ACCESO
+
+CREATE USER VICERRECTORADO IDENTIFIED BY vice_password;
+
+-- TODO: DAR ROLES
+
+-- ######################### USUARIO PARA VIGILANTE DE AULA
+
+-- Añado las columnas necesarias
+ALTER TABLE vocal
+ADD user_name VARCHAR2(50)
+ADD user_password VARCHAR2(50);
+
+-- Meto los nombres de usuario y la contraseña que tendrán
+CREATE OR REPLACE PROCEDURE RELLENA_USUARIO_VIGILANTES
+AS
+    CURSOR vigilantes IS
+    SELECT * FROM VOCAL;
+    
+BEGIN
+    FOR vigilante IN vigilantes LOOP
+
+        UPDATE VOCAL
+        SET user_name = 'V' || vigilante.DNI,
+        user_password = 'A' || DBMS_RANDOM.STRING('x', 8)
+        WHERE DNI =vigilante.DNI;
+            
+    END LOOP;
+    
+    
+END;
+/
+
+BEGIN
+    RELLENA_USUARIO_VIGILANTES;
+END;
+/
+
+-- Creo los usuarios correspondientes
+
+DECLARE 
+    CURSOR vigilantes IS
+    SELECT * FROM VOCAL;
+BEGIN
+    FOR vigilante IN vigilantes LOOP
+        EXECUTE IMMEDIATE 'CREATE USER ' || vigilante.user_name || ' IDENTIFIED BY ' || vigilante.user_password;
+    END LOOP;
+END;
+/
+-- No se me ha creado uno para todos los vocales porque se me ha bugeado en medio pero
+-- me ha creado unos 40 vocales
+
+-- TODO: DAR ROLES 
+
+-- ######################### USUARIO RESPONSABLE DE AULA?
+-- ######################### USUARIO RESPONSABLE DE SEDE?
+
+-- TODO: Eliminar indice sobre telefono y cifrar la columna al crear la tabla, ya tendremos
+-- la columna cifrada requerida
+
+-- TODO: Aplicar VPD que me pasó Pere por discord lo último de todo para no tener
+-- problemas al crear los usuarios que me faltan por crear.
