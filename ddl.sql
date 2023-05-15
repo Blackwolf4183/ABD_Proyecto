@@ -59,7 +59,7 @@ CREATE TABLE estudiante (
     dni           VARCHAR2(9) NOT NULL,
     nombre        VARCHAR2(20) NOT NULL,
     apellidos     VARCHAR2(25) NOT NULL,
-    telefono      VARCHAR2(15) NOT NULL,
+    telefono      VARCHAR2(15) NOT NULL ENCRYPT,
     correo        VARCHAR2(50),
     centro_codigo VARCHAR2(50) NOT NULL
 );
