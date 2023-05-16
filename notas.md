@@ -60,7 +60,7 @@ DUDAS
         - Se han tratado correctamente mayusculas, minúsculas -> sí REVIEW: mirar a ver si se refiere a algo mas
         
         - TODO: DESPISTE
-        - TODO: MIGRAR CENTRO
+        - TODO: MIGRAR s
 
 
     - MAS COSAS DE LA PRIMERA PARTE QUE DECIR
