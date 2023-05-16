@@ -33,3 +33,13 @@ grant read, write on directory directorio_ext to PEVAU;
 GRANT CREATE TRIGGER TO PEVAU;
 
 GRANT CREATE PUBLIC SYNONYM TO PEVAU;
+
+
+--############# Para borrar las tablas de PEVAU si es necesario ###########
+
+BEGIN
+  FOR cur_rec IN (SELECT table_name FROM all_tables WHERE owner = 'PEVAU') LOOP
+    EXECUTE IMMEDIATE 'DROP TABLE ' || cur_rec.table_name || ' CASCADE CONSTRAINTS';
+  END LOOP;
+END;
+/
