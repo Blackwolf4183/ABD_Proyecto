@@ -7,7 +7,6 @@
 
 DUDAS
 
-- PORQUE NO SE GENERAN VALORES ALEATORIOS DISTINTOS EN RELLENA_CARGOS_VOCAL
 - COMO DAR ROLES A USUARIOS SEGUN SU DNI
 
 
@@ -20,8 +19,27 @@ DUDAS
 1) system.sql
 
 - Tener ejecutado system con todo y en la presentacion mostrar solo los selects con usuarios, tablespaces ...
+    - Aqui mostramos con los selects que se han creado los dos tablespaces
 
 2) ddl.sql
 - Mostrar script de creación con campos encriptados (telefono)
 
-3) PEVAU.sql
+3) Entrega.sql
+    - Mostrar creación de índices (+ los de clave primaria que se crean en el ddl) y los selects de los indices
+    - Mostrar relleno de las tablas
+        - relleno aleatorio de los campos que faltan de vocal
+        - tabla externa 
+        - trigger y vista para relleno de CENTRO
+    - VM_estudiantes
+    
+    - Vistas
+        - Explicar distintas vistas (vienen en rubrica cada una)
+    -Procedimientos
+        - Vienen todos los que vienen en la rubrica tal cual 
+    -Paquetes
+        -PA_ASIGNA 
+            - ESTA FUNCION TARDA BASTANTE (POR LO MENOS 5 MIN) -> TENERLA YA EJECUTADA Y MOSTRAR SELECT DE CENTRO
+            
+
+4) seguridad.sql
+
