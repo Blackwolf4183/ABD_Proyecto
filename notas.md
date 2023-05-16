@@ -18,11 +18,17 @@ DUDAS
 
 1) system.sql
 
-- Tener ejecutado system con todo y en la presentacion mostrar solo los selects con usuarios, tablespaces ...
-    - Aqui mostramos con los selects que se han creado los dos tablespaces
+    - Tener ejecutado system con todo y en la presentacion mostrar solo los selects con usuarios, tablespaces ...
+        - Aqui mostramos con los selects que se han creado los dos tablespaces
 
 2) ddl.sql
-- Mostrar script de creación con campos encriptados (telefono)
+    - Mostrar script de creación con campos encriptados (telefono)
+
+    -> Parte extra
+        - Diseño E/R
+            - Restricciones semánticas  -> mostrar que se ha hecho en el ddl
+            - NOT NULL/UNIQUE
+
 
 3) Entrega.sql
     - Mostrar creación de índices (+ los de clave primaria que se crean en el ddl) y los selects de los indices
@@ -39,14 +45,34 @@ DUDAS
     -Paquetes
         -PA_ASIGNA 
             - ESTA FUNCION TARDA BASTANTE (POR LO MENOS 5 MIN) -> TENERLA YA EJECUTADA Y MOSTRAR SELECT DE CENTRO
+        -TODO: falta PK_OCUPACION
+    
+    - Trigger
+        - TODO: falta comprobar TR_BORRA_AULA 
+    
+    - Politica VPD
+        - TODO: POLITICA DE AUTORIZACION VPD PARA ESTUDIANTES
 
-
-    - PARTE EXTRA
+    -> #### PARTE EXTRA ###
         - Rellenar materia, asistencia, vigilancia -> ejecutar
+            - Se consideran procedimientos extras a los propuestos
+        - Se han introducido suficientes datos para comprobar la integridad del modelo lógico -> sí con los procedimientos de arriba
+        - Se han tratado correctamente mayusculas, minúsculas -> sí REVIEW: mirar a ver si se refiere a algo mas
+        
+        - TODO: DESPISTE
+        - TODO: MIGRAR CENTRO
+
 
     - MAS COSAS DE LA PRIMERA PARTE QUE DECIR
         - se han ido haciendo commits en cada procedimiento y otras partes donde insertabamos datos
         - También se han manejado las excepciones y se ha hecho rollback si algo ha salido mal.
 
-4) seguridad.sql
+4) seguridad.sql -> TODO: falta pasar a limpio en entrega con sus partes ordenadas de la rubrica
 
+    - Roles : TODO: falta por hacer
+    - Asignar usuarios a roles: TODO: 
+    - Asignado permisos de forma restrictiva: TODO: 
+    - Operaciones a realizar por los usuarios: TODO: no se bien a que se refiere
+    - Política de gestión de contraseñas: TODO: introducir creo mediante triggers -> preguntar chatgpt
+    - Activación de TDE -> hecho en  seguridad.sql
+    - Auditoría -> hecho en el seguridad.sql
