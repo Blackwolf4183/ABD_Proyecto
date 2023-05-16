@@ -142,8 +142,8 @@ ALTER TABLE sede ADD CONSTRAINT sede_pk PRIMARY KEY ( codigo ) USING INDEX TABLE
 
 CREATE TABLE vocal (
     dni            VARCHAR2(9) NOT NULL,
-    nombre         VARCHAR2(20) NOT NULL,
-    apellidos      VARCHAR2(25) NOT NULL,
+    nombre         VARCHAR2(20) NOT NULL ENCRYPT,
+    apellidos      VARCHAR2(25) NOT NULL ENCRYPT,
     tipo           VARCHAR2(20),
     cargo          VARCHAR2(20),
     materia_codigo VARCHAR2(50)

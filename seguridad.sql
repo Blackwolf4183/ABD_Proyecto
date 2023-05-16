@@ -55,5 +55,31 @@ AUDIT UPDATE, INSERT, DELETE ON asistencia BY ACCESS;
 
 
 
--- TODO: Aplicar VPD que me pasó Pere por discord lo último de todo para no tener
--- problemas al crear los usuarios que me faltan por crear.
+-- POLITICAS VPD
+-- TODO: quedar por hacer bien
+begin dbms_rls.add_policy (object_schema =>'PEVAU',
+    object_name =>'V_ESTUDIANTES',
+    policy_name =>'POL_ESTUDIANTE_DNI',
+    function_schema =>'PEVAU',
+    policy_function => 'SOLO_ESTUDIANTE_DNI',
+    statement_types => 'SELECT' ); 
+end;
+/
+
+
+
+-- ENCRIPTACION TDE
+
+-- en system
+alter system set "WALLET_ROOT"='C:\Users\app\alumnos\Oracle_instalacion\wallet' scope=SPFILE;
+ALTER SYSTEM SET TDE_CONFIGURATION="KEYSTORE_CONFIGURATION=FILE" scope=both;
+select * from v$encryption_wallet;
+
+-- Sqlplus / as syskm
+ADMINISTER KEY MANAGEMENT CREATE KEYSTORE IDENTIFIED BY password;
+ADMINISTER KEY MANAGEMENT CREATE AUTO_LOGIN KEYSTORE FROM KEYSTORE IDENTIFIED BY password;
+ADMINISTER KEY MANAGEMENT SET KEY force keystore identified by password with backup;
+
+
+SELECT * FROM V$ENCRYPTION_WALLET; -- para ver información del keystore
+SELECT * FROM DBA_ENCRYPTED_COLUMNS; -- para ver que está encriptada la columna te telefono
