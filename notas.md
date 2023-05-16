@@ -39,7 +39,11 @@ DUDAS
     -Paquetes
         -PA_ASIGNA 
             - ESTA FUNCION TARDA BASTANTE (POR LO MENOS 5 MIN) -> TENERLA YA EJECUTADA Y MOSTRAR SELECT DE CENTRO
-            
+
+
+    - MAS COSAS DE LA PRIMERA PARTE QUE DECIR
+        - se han ido haciendo commits en cada procedimiento y otras partes donde insertabamos datos
+        - También se han manejado las excepciones y se ha hecho rollback si algo ha salido mal.
 
 4) seguridad.sql
 
