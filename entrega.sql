@@ -301,33 +301,47 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
   --2
   FUNCTION OCUPACION_OK RETURN BOOLEAN IS 
   v_ocupacion NUMBER;
+  capacidadv NUMBER;
   BEGIN
     -- Comprobar que para todos los exámenes aún no realizados,
     -- el número de estudiantes asignados a un aula es inferior o igual a Capacidad_Examen
     FOR examen IN (SELECT *
                    FROM examen
-                   WHERE fechayhora > SYSDATE)
+                   WHERE fechayhora < SYSDATE)
     LOOP
         SELECT COUNT(*) INTO v_ocupacion
         FROM asistencia a
         JOIN examen e ON a.examen_fechayhora = e.fechayhora
         JOIN aula au ON e.aula_codigo = au.codigo;
         
-        IF v_ocupacion > aula.capacidad_examen THEN
+        SELECT au.capacidad_examen INTO capacidadv
+        FROM asistencia a
+        JOIN examen e ON a.examen_fechayhora = e.fechayhora
+        JOIN aula au ON e.aula_codigo = au.codigo;
+        
+        IF v_ocupacion > capacidadv THEN
             RETURN FALSE;
         END IF;
-    END LOOP;
+    
     
     -- Comprobar que el número total de personas no supera Capacidad
     SELECT COUNT(*) INTO v_ocupacion
     FROM asistencia a
     JOIN examen e ON a.examen_fechayhora = e.fechayhora
     JOIN aula au ON e.aula_codigo = au.codigo
-    JOIN sede s ON au.sede_codigo = s.codigo;
+    JOIN vigilancia v ON au.codigo = v.EXAMEN_AULA_CODIGO;
     
-    IF v_ocupacion > aula.capacidad THEN
+    SELECT au.capacidad INTO capacidadv
+        FROM asistencia a
+        JOIN examen e ON a.examen_fechayhora = e.fechayhora
+        JOIN aula au ON e.aula_codigo = au.codigo
+        JOIN vigilancia v ON au.codigo = v.EXAMEN_AULA_CODIGO;
+    
+    IF v_ocupacion > capacidadv THEN
         RETURN FALSE;
     END IF;
+    
+    END LOOP;
 
     RETURN TRUE;
     END OCUPACION_OK;
@@ -388,7 +402,7 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
       JOIN vigilancia v ON e.fechayhora = v.examen_fechayhora
       WHERE e.FECHAYHORA<sysdate;
       
-      SELECT COUNT(DISTINCT v.VOCAL_DNI)
+      SELECT COUNT(DISTINCT a.ESTUDIANTE_DNI)
       INTO v_total_alumnos
       FROM examen e
       JOIN asistencia a ON e.fechayhora = a.examen_fechayhora
