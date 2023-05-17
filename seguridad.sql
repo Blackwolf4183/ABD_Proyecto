@@ -80,13 +80,17 @@ CREATE USER VICERRECTORADO IDENTIFIED BY vice_password;
 
 -- POLITICAS VPD
 -- TODO: quedar por hacer bien
-begin dbms_rls.add_policy (object_schema =>'PEVAU',
-    object_name =>'V_ESTUDIANTES',
-    policy_name =>'POL_ESTUDIANTE_DNI',
-    function_schema =>'PEVAU',
-    policy_function => 'SOLO_ESTUDIANTE_DNI',
-    statement_types => 'SELECT' ); 
-end;
+-- La funcion de add_policy esta en el system, aqui solo se crea la funcion que comprueba
+CREATE OR REPLACE FUNCTION es_usuario_estudiante (
+  PEVAU IN VARCHAR2,
+  ESTUDIANTE IN VARCHAR2
+) RETURN VARCHAR2 IS
+BEGIN
+  -- Compara el nombre de usuario con el DNI, voy a intentar truncar la cadena para que pille el DNI
+  -- RETURN 'DNI = SYS_CONTEXT(''USERENV'', ''SESSION_USER'')';
+  RETURN 'DNI = SUBSTR(SYS_CONTEXT(''USERENV'', ''SESSION_USER''), 2)';
+
+END;
 /
 
 

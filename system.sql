@@ -34,6 +34,20 @@ GRANT CREATE TRIGGER TO PEVAU;
 
 GRANT CREATE PUBLIC SYNONYM TO PEVAU;
 
+-- Crear VPD para estudiantes:
+BEGIN
+  DBMS_RLS.ADD_POLICY(
+    object_schema   => 'PEVAU',
+    object_name     => 'V_ESTUDIANTES',
+    policy_name     => 'politica_estudiantes',
+    function_schema => 'PEVAU',
+    policy_function => 'es_usuario_estudiante',
+    statement_types => 'SELECT',
+    update_check    => FALSE,
+    enable          => TRUE
+  );
+END;
+/
 
 --############# Para borrar las tablas de PEVAU si es necesario ###########
 
