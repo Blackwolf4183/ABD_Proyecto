@@ -1,14 +1,13 @@
 
 
 # TODO
-- hay que darle create session a cada usuario y vocal que creamos para que se puedan conectar
 - TODO: hay que ver si aumentando numero de aulas caben todos los estudiantes, hay algo raro en la asignacion, con menos de 500 alumnos capacidad aula da problemas
 - TODO: cambiar fecha de examen para que sea en julio
 - TODO: trigger hay añadir asistencia quizas y cualquier otra tabla que tenga que ver con el alumno
-- TODO:  Arreglar asistencia aleatoria S, N en rellena_asistencia no funciona
 - TODO: en excepciones, cambiar DMBS_OUTPUT por RAISE error
 - TODO: mirar si quitar ASIGNACION_AULA_VIGILANTE -> ya se cubre con V_asignacion...
 - REVIEW: hay que revisar los permisos a pevau que no den problemas al asignarlo por rol..
+- REVIEW: revisar tema de audit si es realmente a lo que se refieren
 
 # Presentacion
 
@@ -19,6 +18,7 @@
 
     - Pequeña Query para borrar las tablas de un usuario
     - Roles para cada tipo de usuario y grant de privilegios necesarios
+    - Politica VPD
 
 2) ddl.sql
     - Mostrar script de creación con campos encriptados (telefono)
@@ -50,8 +50,6 @@
     - Trigger
         - TR_BORRA_AULA 
     
-    - Politica VPD
-        - TODO: POLITICA DE AUTORIZACION VPD PARA ESTUDIANTES
 
     -> #### PARTE EXTRA ###
         - Rellenar materia, asistencia, vigilancia -> ejecutar
@@ -71,6 +69,7 @@
 
 4) seguridad.sql -> TODO: falta pasar a limpio en entrega con sus partes ordenadas de la rubrica
 
+    - mostrar función de VPD 
     - Asignar usuarios a roles: TODO: 
     - Operaciones a realizar por los usuarios: TODO: no se bien a que se refiere
     - Política de gestión de contraseñas: TODO: introducir creo mediante triggers -> preguntar chatgpt

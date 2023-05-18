@@ -995,15 +995,13 @@ END;
 
 
 -- Rellenar tabla asistencia
-create or replace PROCEDURE RELLENAR_ASISTENCIA 
+CREATE OR REPLACE PROCEDURE RELLENAR_ASISTENCIA 
 AS
     CURSOR ALUMNOS IS 
     SELECT * FROM MATRICULA;
 
-
     -- capacidad de las aulas para el examen
     capacidad_aulas NUMBER;
-    asiste_aleatorio CHAR(1);
 
     aula_codigo VARCHAR(50);
     aula_sede_codigo VARCHAR(50);
@@ -1019,41 +1017,53 @@ BEGIN
             SELECT 'IngAcc' str FROM dual)
     LOOP
         FOR alumno IN ALUMNOS LOOP
+            DECLARE 
+                asiste_aleatorio CHAR(1);
+            BEGIN
+                IF alumno.MATERIA_CODIGO = asignatura.str THEN
+                    
+                    
+                   CASE ROUND(DBMS_RANDOM.VALUE(1, 4))
+                        WHEN 1 THEN asiste_aleatorio := 'S';
+                        WHEN 2 THEN asiste_aleatorio := 'S';
+                        WHEN 3 THEN asiste_aleatorio := 'S';
+                        WHEN 4 THEN asiste_aleatorio := 'N';
+                    END CASE;
 
-            IF alumno.MATERIA_CODIGO = asignatura.str THEN
-                asiste_aleatorio := CASE DBMS_RANDOM.value(1, 4)
-                         WHEN 1 THEN 'N'
-                         ELSE 'S'
-                         END;
-
-                -- aÃ±adimos a la asistencia cada alumno
-                -- tenemos que seleccionar de examen una, donde la suma de los alumnos que 
-                -- asisten ya ahÃ­ no sea ya igual a la capacidad de examen
-
-                SELECT EXAMEN_AULA_CODIGO, EXAMEN_SEDE_CODIGO, EXAMEN_FECHAYHORA INTO aula_codigo,aula_sede_codigo, fechayhora
-                FROM 
-                (
-                    SELECT e.*, COALESCE(COUNT(a.examen_aula_codigo), 0) AS N 
-                    FROM MATERIA_EXAMEN e
-                    LEFT JOIN ASISTENCIA a ON a.EXAMEN_FECHAYHORA = e.EXAMEN_FECHAYHORA AND a.EXAMEN_AULA_CODIGO = e.EXAMEN_AULA_CODIGO
-                    WHERE e.MATERIA_CODIGO=asignatura.str
-                    GROUP BY e.EXAMEN_FECHAYHORA, e.EXAMEN_AULA_CODIGO, e.EXAMEN_SEDE_CODIGO, e.MATERIA_CODIGO
-                )
-
-                WHERE N < capacidad_aulas  FETCH FIRST 1 ROW ONLY;
-
-
-                --DBMS_OUTPUT.PUT_LINE('alumno.ESTUDIANTE_DNI: ' || alumno.ESTUDIANTE_DNI || 'aula_codigo: ' || aula_codigo);
-
-                INSERT INTO ASISTENCIA VALUES(asiste_aleatorio, asiste_aleatorio, alumno.ESTUDIANTE_DNI,
-                                              asignatura.str,fechayhora,aula_codigo,aula_sede_codigo );
-
-            END IF; 
-
+      
+                    --DBMS_OUTPUT.PUT_LINE(asiste_aleatorio);
+                    -- anyadimos a la asistencia cada alumno
+                    -- tenemos que seleccionar de examen una, donde la suma de los alumnos que 
+                    -- asisten ya no sea ya igual a la capacidad de examen
+    
+                    SELECT EXAMEN_AULA_CODIGO, EXAMEN_SEDE_CODIGO, EXAMEN_FECHAYHORA INTO aula_codigo, aula_sede_codigo, fechayhora
+                    FROM 
+                    (
+                        SELECT e.*, COALESCE(COUNT(a.examen_aula_codigo), 0) AS N 
+                        FROM MATERIA_EXAMEN e
+                        LEFT JOIN ASISTENCIA a ON a.EXAMEN_FECHAYHORA = e.EXAMEN_FECHAYHORA AND a.EXAMEN_AULA_CODIGO = e.EXAMEN_AULA_CODIGO
+                        WHERE e.MATERIA_CODIGO=asignatura.str
+                        GROUP BY e.EXAMEN_FECHAYHORA, e.EXAMEN_AULA_CODIGO, e.EXAMEN_SEDE_CODIGO, e.MATERIA_CODIGO
+                    )
+    
+                    WHERE N < capacidad_aulas  FETCH FIRST 1 ROW ONLY;
+    
+                    --DBMS_OUTPUT.PUT_LINE('alumno.ESTUDIANTE_DNI: ' || alumno.ESTUDIANTE_DNI || 'aula_codigo: ' || aula_codigo);
+    
+                    INSERT INTO ASISTENCIA
+                    VALUES (asiste_aleatorio, asiste_aleatorio, alumno.ESTUDIANTE_DNI, asignatura.str, fechayhora, aula_codigo, aula_sede_codigo);
+                END IF; 
+            END;
         END LOOP;
     END LOOP;
-
-
+    
+    COMMIT;
+    EXCEPTION
+    WHEN OTHERS THEN
+        -- Rollback the transaction
+        ROLLBACK;
+        -- Raise an exception
+        RAISE_APPLICATION_ERROR(-20001, 'An error occurred: ' || SQLERRM);
 END;
 /
 
