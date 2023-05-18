@@ -342,6 +342,7 @@ END;
 -- RELLENAMOS LAS AULAS
 
 BEGIN
+    --PONER 20_500
     PR_RELLENA_AULAS(10,500);
 END;
 /
@@ -581,6 +582,198 @@ END;
 
 -- PK OCUPACION TODO: FALTA POR HACER
 
+CREATE OR REPLACE PACKAGE PK_OCUPACION AS
+  FUNCTION OCUPACION_MAXIMA(p_cod_sede IN sede.codigo%TYPE, p_cod_aula IN aula.codigo%TYPE) RETURN NUMBER;
+  FUNCTION OCUPACION_OK RETURN BOOLEAN;
+  FUNCTION VOCAL_DUPLICADO(p_cod_vocal IN vocal.dni%TYPE) RETURN BOOLEAN;
+  FUNCTION VOCALES_DUPLICADOS RETURN BOOLEAN;
+  FUNCTION VOCAL_RATIO(p_ratio IN NUMBER) RETURN BOOLEAN;
+END PK_OCUPACION;
+/
+
+CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
+
+--1
+  FUNCTION OCUPACION_MAXIMA(p_cod_sede IN sede.codigo%TYPE, p_cod_aula IN aula.codigo%TYPE) 
+  RETURN NUMBER 
+  IS
+    v_ocupacion_maxima NUMBER;
+    n_vocales NUMBER;
+  BEGIN
+  
+  -- Buscas por examen, y dado el codigo de aula y sede el maximo numero de alumnos que hace ese examen de entre las fechas
+  SELECT MAX(N) INTO v_ocupacion_maxima
+  FROM (
+  SELECT COUNT(*) AS N, MATERIA_CODIGO, EXAMEN_FECHAYHORA, EXAMEN_AULA_CODIGO, EXAMEN_SEDE_CODIGO 
+    FROM ASISTENCIA 
+    WHERE EXAMEN_AULA_CODIGO =p_cod_sede AND EXAMEN_SEDE_CODIGO = p_cod_aula
+    GROUP BY MATERIA_CODIGO, EXAMEN_FECHAYHORA, EXAMEN_AULA_CODIGO, EXAMEN_SEDE_CODIGO
+  );
+  
+  -- buscas el máximo numero de vocales asignados a esa aula
+  SELECT MAX(N) INTO n_vocales
+  FROM (
+  SELECT COUNT(*) AS N, MATERIA_CODIGO, EXAMEN_FECHAYHORA, EXAMEN_AULA_CODIGO, EXAMEN_SEDE_CODIGO 
+    FROM V_ASIGNACION_VIGILANTES 
+    WHERE EXAMEN_AULA_CODIGO =p_cod_sede AND EXAMEN_SEDE_CODIGO = p_cod_aula
+    GROUP BY MATERIA_CODIGO, EXAMEN_FECHAYHORA, EXAMEN_AULA_CODIGO, EXAMEN_SEDE_CODIGO
+  );
+  
+  v_ocupacion_maxima := v_ocupacion_maxima + n_vocales;
+  
+  RETURN v_ocupacion_maxima;
+  END OCUPACION_MAXIMA;
+  
+  --2
+  FUNCTION OCUPACION_OK RETURN BOOLEAN IS 
+      capacidad_examen NUMBER;
+      n_alumnos_aula NUMBER;
+    BEGIN
+    
+        
+        FOR examen IN (SELECT * FROM MATERIA_EXAMEN) LOOP
+            
+            --tomamos la capacidad de la aula en la que se hace el examen
+            SELECT CAPACIDAD_EXAMEN INTO capacidad_examen
+            FROM MATERIA_EXAMEN 
+            JOIN AULA ON EXAMEN_AULA_CODIGO= CODIGO AND EXAMEN_SEDE_CODIGO = SEDE_CODIGO
+            WHERE CODIGO = examen.EXAMEN_AULA_CODIGO AND SEDE_CODIGO = examen.EXAMEN_SEDE_CODIGO
+            AND MATERIA_CODIGO = examen.MATERIA_CODIGO;
+            
+            SELECT COUNT(*) INTO n_alumnos_aula FROM
+            ASISTENCIA 
+            WHERE EXAMEN_FECHAYHORA = examen.EXAMEN_FECHAYHORA AND EXAMEN_AULA_CODIGO = examen.EXAMEN_AULA_CODIGO
+            AND EXAMEN_SEDE_CODIGO = examen.EXAMEN_SEDE_CODIGO;
+            
+            
+            IF n_alumnos_aula > capacidad_examen+1 THEN
+                return FALSE;
+            END IF;
+        END LOOP;
+
+        RETURN TRUE;
+    END OCUPACION_OK;
+    
+    --3
+    FUNCTION VOCAL_DUPLICADO(p_cod_vocal IN vocal.dni%TYPE) RETURN BOOLEAN IS
+    vocal_duplicado NUMBER;
+    BEGIN
+        SELECT COUNT(*) INTO vocal_duplicado
+        FROM (
+            SELECT DISTINCT e1.fechayhora, e2.fechayhora
+            FROM examen e1
+            JOIN examen e2 ON e1.fechayhora <> e2.fechayhora -- <> == diferente
+            JOIN vigilancia ve1 ON e1.fechayhora = ve1.examen_fechayhora
+            JOIN vigilancia ve2 ON e2.fechayhora = ve2.examen_fechayhora
+            JOIN vocal v ON ve1.vocal_dni = v.dni AND ve2.vocal_dni = v.dni
+            WHERE e1.fechayhora = e2.fechayhora
+            AND v.dni = p_cod_vocal
+    );
+    RETURN (vocal_duplicado>1);
+    END VOCAL_DUPLICADO;
+    
+    --4
+    FUNCTION VOCALES_DUPLICADOS RETURN BOOLEAN IS
+        vocales_duplicados NUMBER;
+        BEGIN
+            SELECT COUNT(*) INTO vocales_duplicados
+        FROM (
+            SELECT DISTINCT e1.fechayhora, e2.fechayhora
+            FROM examen e1
+            JOIN examen e2 ON e1.fechayhora <> e2.fechayhora -- <> == diferente
+            JOIN vigilancia ve1 ON e1.fechayhora = ve1.examen_fechayhora
+            JOIN vigilancia ve2 ON e2.fechayhora = ve2.examen_fechayhora
+            JOIN vocal v ON ve1.vocal_dni = v.dni AND ve2.vocal_dni = v.dni
+            WHERE e1.FECHAYHORA = e2.FECHAYHORA
+    );
+        RETURN (vocales_duplicados>1);
+    END VOCALES_DUPLICADOS;
+    
+  FUNCTION VOCAL_RATIO(p_ratio IN NUMBER) RETURN BOOLEAN IS
+    v_examen_no_realizado NUMBER;
+    v_total_alumnos NUMBER;
+    v_total_vigilantes NUMBER;
+    v_ratio NUMBER;
+  BEGIN
+    -- Obtener la cantidad de exámenes aún no realizados
+    SELECT COUNT(*)
+    INTO v_examen_no_realizado
+    FROM examen
+    WHERE FECHAYHORA>sysdate;
+    
+    -- Verificar si existen exámenes no realizados
+    IF v_examen_no_realizado > 0 THEN
+        -- for por cada examen
+        -- suma alumnos
+        -- suma vigilantes
+        --  1/ENTRADA <= VILANTES/ALUMNOS
+        
+        FOR examen IN (SELECT * FROM MATERIA_EXAMEN ) LOOP
+        
+                SELECT COUNT(*) INTO v_total_alumnos
+                FROM ASISTENCIA 
+                WHERE MATERIA_CODIGO = examen.MATERIA_CODIGO AND 
+                EXAMEN_FECHAYHORA = examen.EXAMEN_FECHAYHORA AND
+                EXAMEN_AULA_CODIGO = examen.EXAMEN_AULA_CODIGO;
+                
+                SELECT COUNT(*) INTO v_total_vigilantes
+                FROM ASISTENCIA 
+                WHERE 
+                EXAMEN_FECHAYHORA = examen.EXAMEN_FECHAYHORA AND
+                EXAMEN_AULA_CODIGO = examen.EXAMEN_AULA_CODIGO;
+                
+                IF (1/p_ratio) > (v_total_vigilantes/v_total_alumnos) THEN
+                    RETURN FALSE;
+                END IF;
+        END LOOP;
+    END IF;
+    
+    RETURN TRUE;
+  END VOCAL_RATIO;
+  
+END PK_OCUPACION;
+/
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE(PK_OCUPACION.OCUPACION_MAXIMA('SEDE11AULA7','11'));
+END;
+/
+
+
+
+DECLARE
+    v_result BOOLEAN;
+BEGIN
+    v_result := PK_OCUPACION.OCUPACION_OK();
+    DBMS_OUTPUT.PUT_LINE('La asignación es correcta: ' || CASE WHEN v_result THEN 'TRUE' ELSE 'FALSE' END);
+END;
+/
+
+
+DECLARE
+    v_result BOOLEAN;
+BEGIN
+    v_result := PK_OCUPACION.VOCAL_DUPLICADO('86382068I');
+    DBMS_OUTPUT.PUT_LINE('Hay vocal duplicado: ' || CASE WHEN v_result THEN 'TRUE' ELSE 'FALSE' END);
+END;
+/
+
+DECLARE
+    v_result BOOLEAN;
+BEGIN
+    v_result := PK_OCUPACION.VOCALES_DUPLICADOS();
+    DBMS_OUTPUT.PUT_LINE('Hay vocal duplicado: ' || CASE WHEN v_result THEN 'TRUE' ELSE 'FALSE' END);
+END;
+/
+
+
+DECLARE
+    v_result BOOLEAN;
+BEGIN
+    v_result := PK_OCUPACION.VOCAL_RATIO(100);
+    DBMS_OUTPUT.PUT_LINE('Se cumple el ratio de vocales: ' || CASE WHEN v_result THEN 'TRUE' ELSE 'FALSE' END);
+END;
+/
 
 -- TRIGGERS TR_BORRA_AULA
 
@@ -815,3 +1008,30 @@ BEGIN
     RELLENAR_ASISTENCIA;
 END;
 /
+
+
+
+-- ########### VISTAS PRACTICA 3 ###########
+
+CREATE OR REPLACE VIEW V_OCUPACION_ASIGNADA AS
+SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(a.estudiante_dni) AS num_estudiantes
+FROM sede s
+INNER JOIN examen e ON s.codigo = e.aula_sede_codigo
+INNER JOIN asistencia a ON e.aula_codigo = a.examen_aula_codigo
+GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;
+
+
+CREATE OR REPLACE VIEW V_OCUPACION AS
+SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(a.estudiante_dni) AS num_estudiantes
+FROM sede s
+INNER JOIN examen e ON s.codigo = e.aula_sede_codigo
+INNER JOIN asistencia a ON e.aula_codigo = a.examen_aula_codigo
+WHERE a.asiste = 'S'
+GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;
+
+CREATE OR REPLACE VIEW V_VIGILANTES AS
+SELECT s.codigo AS codigo_sede, s.nombre AS nombre_sede, e.aula_codigo AS codigo_aula, e.fechayhora AS fecha_examen, COUNT(v.VOCAL_DNI) AS num_vigilantes
+FROM sede s
+INNER JOIN examen e ON s.codigo = e.aula_sede_codigo
+INNER JOIN vigilancia v ON e.aula_codigo = v.examen_aula_codigo
+GROUP BY s.codigo, s.nombre, e.aula_codigo, e.fechayhora;

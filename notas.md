@@ -12,7 +12,8 @@ DUDAS
 
 # TODO
 - hay que darle create session a cada usuario y vocal que creamos para que se puedan conectar
-
+- TODO: hay que mirar V_CONTADOR_ESTUDIANTES_EXAMEN no tiene mucho sentido
+- TODO: hay que ver si aumentando numero de aulas caben todos los estudiantes, hay algo raro en la asignacion, con menos de 500 alumnos capacidad aula da problemas
 
 # Presentacion
 
@@ -66,6 +67,8 @@ DUDAS
     - MAS COSAS DE LA PRIMERA PARTE QUE DECIR
         - se han ido haciendo commits en cada procedimiento y otras partes donde insertabamos datos
         - También se han manejado las excepciones y se ha hecho rollback si algo ha salido mal.
+
+        - Respecto la practica 3 enseñar vistas V_OCUPACION_ASIGNADA, V_OCUPACION, V_VIGILANTES
 
 4) seguridad.sql -> TODO: falta pasar a limpio en entrega con sus partes ordenadas de la rubrica
 
