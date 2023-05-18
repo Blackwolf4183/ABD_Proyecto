@@ -8,6 +8,7 @@
 - TODO:  Arreglar asistencia aleatoria S, N en rellena_asistencia no funciona
 - TODO: en excepciones, cambiar DMBS_OUTPUT por RAISE error
 - TODO: mirar si quitar ASIGNACION_AULA_VIGILANTE -> ya se cubre con V_asignacion...
+- REVIEW: hay que revisar los permisos a pevau que no den problemas al asignarlo por rol..
 
 # Presentacion
 

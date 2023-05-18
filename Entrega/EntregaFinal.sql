@@ -391,6 +391,7 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
   PROCEDURE PR_CREA_ESTUDIANTE(p_identificador IN VARCHAR2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2) IS
     v_usuario VARCHAR2(50);
     v_contrasena VARCHAR2(50);
+    
   BEGIN
     -- Generar nombre de usuario y contraseña utilizando DBMS_RANDOM.STRING
     v_usuario := 'E' || p_identificador;
@@ -403,22 +404,22 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     
     -- Asignar roles y permisos al usuario creado
     EXECUTE IMMEDIATE 'CREATE USER ' || v_usuario || ' IDENTIFIED BY ' || v_contrasena;
-    --TODO: dar roles
-    --EXECUTE IMMEDIATE 'GRANT SELECT ON ASIGNACION_AULA_ESTUDIANTE TO ' || v_usuario || ' WHERE ESTUDIANTE_DNI =' || p_identificador;
+    EXECUTE IMMEDIATE 'GRANT ESTUDIANTE TO ' || v_usuario;
+    EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ' || v_usuario;
+    EXECUTE IMMEDIATE 'grant read,write on directory directorio_ext to ' || v_usuario;
     
     -- Asignar los valores generados a los argumentos de salida
     p_nombre_usuario := v_usuario;
     p_contrasena := v_contrasena;
-    EXCEPTION
-    WHEN OTHERS THEN
-    -- Manejo de excepción para errores generales
-    DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
-    ROLLBACK; -- Deshacer todos los cambios realizados en caso de un error general
+    
+    
+
   END PR_CREA_ESTUDIANTE;
   
   PROCEDURE PR_CREA_VOCAL(p_identificador IN VARCHAR2, p_nombre_usuario OUT VARCHAR2, p_contrasena OUT VARCHAR2) IS
     v_usuario VARCHAR2(50);
     v_contrasena VARCHAR2(50);
+    v_cargo_vocal VARCHAR2(50);
   BEGIN
     -- Generar nombre de usuario y contraseña utilizando DBMS_RANDOM.STRING
     v_usuario := 'V' || p_identificador;
@@ -429,7 +430,24 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     
     -- Asignar roles y permisos al usuario creado
     EXECUTE IMMEDIATE 'CREATE USER ' || v_usuario || ' IDENTIFIED BY ' || v_contrasena;
-   
+
+    -- Buscamos cargo del vocal y le asignamos permisos permitentes según el cargo
+    SELECT CARGO INTO v_cargo_vocal FROM VOCAL 
+    WHERE DNI = p_identificador;
+    
+
+    IF v_cargo_vocal = 'VIGILANTE' THEN
+       EXECUTE IMMEDIATE 'GRANT V_AULA TO ' || v_usuario;
+    ELSIF v_cargo_vocal = 'R_AULA' THEN
+       EXECUTE IMMEDIATE 'GRANT R_AULA TO ' || v_usuario;
+    ELSIF v_cargo_vocal = 'R_SEDE' THEN
+       EXECUTE IMMEDIATE 'GRANT R_SEDE TO ' || v_usuario;
+    ELSE
+       -- Handle any other cases or provide a default action
+       RAISE_APPLICATION_ERROR(-20001, 'Cargo no valido.');
+    END IF;
+    EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ' || v_usuario;
+    EXECUTE IMMEDIATE 'grant read,write on directory directorio_ext to ' || v_usuario;
     
     -- Asignar los valores generados a los argumentos de salida
     p_nombre_usuario := v_usuario;
@@ -444,21 +462,20 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
 END PK_CREACION_USUARIOS;
 /
 
+
 -- HACEMOS UNA PRUEBA PARA GENERAR EL NOMBRE DE USUARIO Y CONTRASEÑA DE UN VOCAL
 -- cuidado de que esté ya en la base de datos dicho usuario si no , no funcionará.
 DECLARE
   v_nombre_usuario VARCHAR2(50);
   v_contrasena VARCHAR2(50);
 BEGIN
-  PK_CREACION_USUARIOS.PR_CREA_VOCAL('87104368Z', v_nombre_usuario, v_contrasena);
-  -- Puedes reemplazar 'identificador_estudiante' con el valor deseado para el parámetro p_identificador.
+  PK_CREACION_USUARIOS.PR_CREA_VOCAL('86382068I', v_nombre_usuario, v_contrasena);
   
   -- Imprime los valores generados para el nombre de usuario y la contraseña
   DBMS_OUTPUT.PUT_LINE('Nombre de usuario: ' || v_nombre_usuario);
   DBMS_OUTPUT.PUT_LINE('Contraseña: ' || v_contrasena);
 END;
 /
-
 -- 4. PAQUETES PL/SQL
 
 -- PQ_ASIGNA
@@ -584,7 +601,6 @@ BEGIN
 END;
 /
 
--- PK OCUPACION TODO: FALTA POR HACER
 
 CREATE OR REPLACE PACKAGE PK_OCUPACION AS
   FUNCTION OCUPACION_MAXIMA(p_cod_sede IN sede.codigo%TYPE, p_cod_aula IN aula.codigo%TYPE) RETURN NUMBER;
@@ -766,7 +782,7 @@ DECLARE
     v_result BOOLEAN;
 BEGIN
     v_result := PK_OCUPACION.VOCALES_DUPLICADOS();
-    DBMS_OUTPUT.PUT_LINE('Hay vocal duplicado: ' || CASE WHEN v_result THEN 'TRUE' ELSE 'FALSE' END);
+    DBMS_OUTPUT.PUT_LINE('Hay vocales duplicado: ' || CASE WHEN v_result THEN 'TRUE' ELSE 'FALSE' END);
 END;
 /
 
@@ -814,7 +830,7 @@ BEGIN
 END;
 /
 
-
+-- ejemplo
 DELETE FROM AULA WHERE CODIGO ='SEDE10AULA1';
 
 -- POLITICA DE AUTORIZACION VPD PARA ESTUDIANTES
