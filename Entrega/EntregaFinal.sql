@@ -171,7 +171,7 @@ SELECT ESTUDIANTE_DNI, MATERIA_CODIGO, EXAMEN_FECHAYHORA, EXAMEN_AULA_CODIGO, EX
 FROM ASISTENCIA;
 -- PARA LOS DATOS DEL ESTUDIANTE PODEMOS USAR V_ESTUDIANTE
 
--- VISTA VIGILANTE PARA VER SU ASIGNACIÓN DE AULA
+-- VISTA VIGILANTE PARA VER SU ASIGNACIÓN DE AULA -> ya se consigue con V_ASIGNACION_VIGILANTE 
 CREATE OR REPLACE VIEW ASIGNACION_AULA_VIGILANTE AS 
 SELECT *
 FROM VIGILANCIA;
@@ -198,6 +198,10 @@ WHERE CARGO = 'VIGILANTE' OR CARGO = 'R_AULA';
 
 --RESPONSABLE DE AULA
 -- ACTUALIZACIÓN DE ESTUDIANTES EN EL AULA
+--Metemos un nuevo campo en la tabla examne para poder poner el número de estudiantes que va
+ALTER TABLE EXAMEN
+ADD N_ESTUDIANTES NUMBER;
+
 CREATE OR REPLACE VIEW V_CONTADOR_ESTUDIANTES_EXAMEN AS
 SELECT * FROM EXAMEN;
 
@@ -777,6 +781,41 @@ END;
 
 -- TRIGGERS TR_BORRA_AULA
 
+CREATE OR REPLACE TRIGGER TR_BORRA_AULA
+BEFORE DELETE ON AULA
+FOR EACH ROW
+DECLARE
+    --Declaramos una variable para poder comprobar el numero de examenes que hay en el aula
+    v_num_examenes INTEGER;
+BEGIN
+    -- Comprobamos si ya se ha realizado algun examen en el aula
+    SELECT COUNT(*) INTO v_num_examenes FROM MATERIA_EXAMEN 
+    WHERE EXAMEN_FECHAYHORA < SYSDATE;
+    
+    IF v_num_examenes > 0 THEN
+        RAISE_APPLICATION_ERROR(-20001, 'No se puede borrar el aula porque ya se han realizado examenes en la misma.');
+    END IF;
+    
+    -- Comprobamos si se va a realizar algun examen en el aula en las proximas 48 horas
+    SELECT COUNT(*) INTO v_num_examenes
+    FROM MATERIA_EXAMEN
+    WHERE EXAMEN_FECHAYHORA BETWEEN SYSDATE AND SYSDATE + 2;
+    
+    IF v_num_examenes > 0 THEN
+        RAISE_APPLICATION_ERROR(-20002, 'No se puede borrar el aula porque hay examenes planificados en las proximas 48 horas.');
+    END IF;
+    
+    -- Como resultado, todos los examenes que esten planificados para dicha aula se eliminan de la tabla "EXAMEN" y "MATERIA_EXAMEN"
+    DELETE FROM EXAMEN
+    WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA >= SYSDATE;
+    
+    DELETE FROM MATERIA_EXAMEN
+    WHERE EXAMEN_AULA_CODIGO = :OLD.CODIGO AND EXAMEN_FECHAYHORA >= SYSDATE;
+END;
+/
+
+
+DELETE FROM AULA WHERE CODIGO ='SEDE10AULA1';
 
 -- POLITICA DE AUTORIZACION VPD PARA ESTUDIANTES
 

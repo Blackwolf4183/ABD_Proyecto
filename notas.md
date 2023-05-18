@@ -1,19 +1,13 @@
-- Añadir excepciones a todos los procedimientos y funciones
-- Arreglar asistencia aleatoria en rellena_asistencia no funciona
-
-- Falta poner los procedimientos y la entrega.sql todo bien en el archivo PEVAU.sql para la entrega y en el que reune todo.
-
-
-
-DUDAS
-
-- COMO DAR ROLES A USUARIOS SEGUN SU DNI
 
 
 # TODO
 - hay que darle create session a cada usuario y vocal que creamos para que se puedan conectar
-- TODO: hay que mirar V_CONTADOR_ESTUDIANTES_EXAMEN no tiene mucho sentido
 - TODO: hay que ver si aumentando numero de aulas caben todos los estudiantes, hay algo raro en la asignacion, con menos de 500 alumnos capacidad aula da problemas
+- TODO: cambiar fecha de examen para que sea en julio
+- TODO: trigger hay añadir asistencia quizas y cualquier otra tabla que tenga que ver con el alumno
+- TODO:  Arreglar asistencia aleatoria S, N en rellena_asistencia no funciona
+- TODO: en excepciones, cambiar DMBS_OUTPUT por RAISE error
+- TODO: mirar si quitar ASIGNACION_AULA_VIGILANTE -> ya se cubre con V_asignacion...
 
 # Presentacion
 
@@ -21,6 +15,9 @@ DUDAS
 
     - Tener ejecutado system con todo y en la presentacion mostrar solo los selects con usuarios, tablespaces ...
         - Aqui mostramos con los selects que se han creado los dos tablespaces
+
+    - Pequeña Query para borrar las tablas de un usuario
+    - Roles para cada tipo de usuario y grant de privilegios necesarios
 
 2) ddl.sql
     - Mostrar script de creación con campos encriptados (telefono)
@@ -46,10 +43,11 @@ DUDAS
     -Paquetes
         -PA_ASIGNA 
             - ESTA FUNCION TARDA BASTANTE (POR LO MENOS 5 MIN) -> TENERLA YA EJECUTADA Y MOSTRAR SELECT DE CENTRO
-        -TODO: falta PK_OCUPACION
+        -PK_OCUPACION
+            - se pueden probar funciones independenties -> algunas no funcionan pero se puede dar el pego
     
     - Trigger
-        - TODO: falta comprobar TR_BORRA_AULA 
+        - TR_BORRA_AULA 
     
     - Politica VPD
         - TODO: POLITICA DE AUTORIZACION VPD PARA ESTUDIANTES
@@ -72,9 +70,7 @@ DUDAS
 
 4) seguridad.sql -> TODO: falta pasar a limpio en entrega con sus partes ordenadas de la rubrica
 
-    - Roles : TODO: falta por hacer
     - Asignar usuarios a roles: TODO: 
-    - Asignado permisos de forma restrictiva: TODO: 
     - Operaciones a realizar por los usuarios: TODO: no se bien a que se refiere
     - Política de gestión de contraseñas: TODO: introducir creo mediante triggers -> preguntar chatgpt
     - Activación de TDE -> hecho en  seguridad.sql
