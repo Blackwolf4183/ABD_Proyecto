@@ -770,7 +770,7 @@ END;
 DECLARE
     v_result BOOLEAN;
 BEGIN
-    v_result := PK_OCUPACION.VOCAL_RATIO(100);
+    v_result := PK_OCUPACION.VOCAL_RATIO(200);
     DBMS_OUTPUT.PUT_LINE('Se cumple el ratio de vocales: ' || CASE WHEN v_result THEN 'TRUE' ELSE 'FALSE' END);
 END;
 /
