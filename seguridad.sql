@@ -79,19 +79,26 @@ CREATE USER VICERRECTORADO IDENTIFIED BY vice_password;
 
 
 -- POLITICAS VPD
--- TODO: quedar por hacer bien
 -- La funcion de add_policy esta en el system, aqui solo se crea la funcion que comprueba
 CREATE OR REPLACE FUNCTION es_usuario_estudiante (
   PEVAU IN VARCHAR2,
   ESTUDIANTE IN VARCHAR2
 ) RETURN VARCHAR2 IS
 BEGIN
-  -- Compara el nombre de usuario con el DNI, voy a intentar truncar la cadena para que pille el DNI
-  -- RETURN 'DNI = SYS_CONTEXT(''USERENV'', ''SESSION_USER'')';
+  -- Compara el nombre de usuario con el DNI
   RETURN 'DNI = SUBSTR(SYS_CONTEXT(''USERENV'', ''SESSION_USER''), 2)';
 
 END;
 /
 
+CREATE OR REPLACE FUNCTION es_usuario_vocal (
+  PEVAU IN VARCHAR2,
+  VOCAL IN VARCHAR2
+) RETURN VARCHAR2 IS
+BEGIN
+  -- Compara el nombre de usuario con el DNI
+  RETURN 'DNI = SUBSTR(SYS_CONTEXT(''USERENV'', ''SESSION_USER''), 2)';
 
+END;
+/
 

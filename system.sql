@@ -49,6 +49,24 @@ BEGIN
 END;
 /
 
+-- Crear VPD para vocales:
+-- TODO: comprobar nombre de la vista
+BEGIN
+  DBMS_RLS.ADD_POLICY(
+    object_schema   => 'PEVAU',
+    object_name     => 'ASIGNACION_AULA_VIGILANTE',
+    policy_name     => 'politica_vocales',
+    function_schema => 'PEVAU',
+    policy_function => 'es_usuario_vocal',
+    statement_types => 'SELECT',
+    update_check    => FALSE,
+    enable          => TRUE
+  );
+END;
+/
+
+-- Crear VPD para vocales
+
 --############# Para borrar las tablas de PEVAU si es necesario ###########
 
 BEGIN
