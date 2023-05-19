@@ -5,6 +5,9 @@
 - TODO: trigger hay añadir asistencia quizas y cualquier otra tabla que tenga que ver con el alumno
 - REVIEW: hay que revisar los permisos a pevau que no den problemas al asignarlo por rol..
 - TODO: crear alguna politica VPD mas para vocal
+- TODO: política gestión de contraseñas ????
+- TODO: crear archivo con distintos usuario y diferentes selects, deletes, que deberian de ser capaces de hacer y algo que no deberían ser capaces de hacer
+- TODO: revisar PK_OCUPACION arreglar lo que no funcione
 
 >>> TODO: PREPARAR MEMORIA DONDE VAYA PONIENDO CADA PASO Y SE VEA QUE FUNCIONA POR SI ALGO FALLA
 
@@ -69,8 +72,11 @@
 4) seguridad.sql -> 
 
     - mostrar función de VPD 
-    - Asignar usuarios a roles: 
-    - Operaciones a realizar por los usuarios: TODO: no se bien a que se refiere
+    - Asignar usuarios a roles: en system 
     - Política de gestión de contraseñas: TODO: introducir creo mediante triggers -> preguntar chatgpt
     - Activación de TDE -> hecho en  seguridad.sql
     - Auditoría -> hecho en el seguridad.sql
+
+5) usuarios.sql
+
+    - mostrar que cada tipo de usuario con rol puede acceder a determinados elementos
