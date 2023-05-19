@@ -913,10 +913,10 @@ BEGIN
     
     SELECT MIN(CAPACIDAD_EXAMEN) INTO capacidad_aulas FROM AULA;
 
-    
-    Fechas(1) := TO_DATE('2023/05/01 08:00:00', 'yyyy/mm/dd hh24:mi:ss');
-    Fechas(2) := TO_DATE('2023/05/02 11:30:00', 'yyyy/mm/dd hh24:mi:ss');
-    Fechas(3) := TO_DATE('2023/05/03 13:00:00', 'yyyy/mm/dd hh24:mi:ss');
+    -- Tres fechas diferentes para probar (cambiamos dia para que se vea a simple vista en las tablas ya que no muestra la hora)
+    Fechas(1) := TO_DATE('2023/06/01 08:00:00', 'yyyy/mm/dd hh24:mi:ss');
+    Fechas(2) := TO_DATE('2023/06/02 11:30:00', 'yyyy/mm/dd hh24:mi:ss');
+    Fechas(3) := TO_DATE('2023/06/03 13:00:00', 'yyyy/mm/dd hh24:mi:ss');
     
     -- calculamos cuantas aulas necesitamos por cada materia
     SELECT COUNT(*) INTO n_aulas_hist FROM MATRICULA 

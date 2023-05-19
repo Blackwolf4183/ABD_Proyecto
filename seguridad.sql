@@ -6,7 +6,7 @@ AUDIT UPDATE, INSERT, DELETE ON asistencia BY ACCESS;
 
 -- ENCRIPTACION TDE
 
--- en system
+-- EN SYSTEM
 alter system set "WALLET_ROOT"='C:\Users\app\alumnos\Oracle_instalacion\wallet' scope=SPFILE;
 ALTER SYSTEM SET TDE_CONFIGURATION="KEYSTORE_CONFIGURATION=FILE" scope=both;
 select * from v$encryption_wallet;

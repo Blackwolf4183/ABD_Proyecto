@@ -2,10 +2,11 @@
 
 # TODO
 - TODO: hay que ver si aumentando numero de aulas caben todos los estudiantes, hay algo raro en la asignacion, con menos de 500 alumnos capacidad aula da problemas
-- TODO: cambiar fecha de examen para que sea en julio
 - TODO: trigger hay añadir asistencia quizas y cualquier otra tabla que tenga que ver con el alumno
 - REVIEW: hay que revisar los permisos a pevau que no den problemas al asignarlo por rol..
-- REVIEW: revisar tema de audit si es realmente a lo que se refieren
+- TODO: crear alguna politica VPD mas para vocal
+
+>>> TODO: PREPARAR MEMORIA DONDE VAYA PONIENDO CADA PASO Y SE VEA QUE FUNCIONA POR SI ALGO FALLA
 
 # Presentacion
 
@@ -65,10 +66,10 @@
 
         - Respecto la practica 3 enseñar vistas V_OCUPACION_ASIGNADA, V_OCUPACION, V_VIGILANTES
 
-4) seguridad.sql -> TODO: falta pasar a limpio en entrega con sus partes ordenadas de la rubrica
+4) seguridad.sql -> 
 
     - mostrar función de VPD 
-    - Asignar usuarios a roles: TODO: 
+    - Asignar usuarios a roles: 
     - Operaciones a realizar por los usuarios: TODO: no se bien a que se refiere
     - Política de gestión de contraseñas: TODO: introducir creo mediante triggers -> preguntar chatgpt
     - Activación de TDE -> hecho en  seguridad.sql
