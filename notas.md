@@ -4,8 +4,6 @@
 - TODO: hay que ver si aumentando numero de aulas caben todos los estudiantes, hay algo raro en la asignacion, con menos de 500 alumnos capacidad aula da problemas
 - TODO: cambiar fecha de examen para que sea en julio
 - TODO: trigger hay añadir asistencia quizas y cualquier otra tabla que tenga que ver con el alumno
-- TODO: en excepciones, cambiar DMBS_OUTPUT por RAISE error
-- TODO: mirar si quitar ASIGNACION_AULA_VIGILANTE -> ya se cubre con V_asignacion...
 - REVIEW: hay que revisar los permisos a pevau que no den problemas al asignarlo por rol..
 - REVIEW: revisar tema de audit si es realmente a lo que se refieren
 
