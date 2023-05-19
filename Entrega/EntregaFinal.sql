@@ -235,14 +235,15 @@ BEGIN
       SELECT PESTDNI, v_codigo_materia FROM DUAL; 
 
       COMMIT;
+
     EXCEPTION
       WHEN NO_DATA_FOUND THEN
         -- Manejo de excepción cuando no se encuentra el código de materia
-        DBMS_OUTPUT.PUT_LINE('No se encontró el código de materia para: ' || nombre_materia.materia);
+        RAISE_APPLICATION_ERROR(-20001, 'No se encontró el código de materia para: ' || nombre_materia.materia);
         ROLLBACK;
       WHEN OTHERS THEN
         -- Manejo de excepción para otros errores
-        DBMS_OUTPUT.PUT_LINE('Ocurrió un error al procesar la materia: ' || nombre_materia.materia);
+        RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error al procesar la materia: ' || nombre_materia.materia);
         ROLLBACK;
     END;
   END LOOP;
@@ -250,7 +251,7 @@ BEGIN
   EXCEPTION
     WHEN OTHERS THEN
       -- Manejo de excepción para errores generales
-      DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+      RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error general en el procedimiento PR_INSERTA_MATERIAS.');
       ROLLBACK;
 END;
 /
@@ -267,14 +268,14 @@ BEGIN
         EXCEPTION
             WHEN OTHERS THEN
                 -- Manejo de excepción para errores generales
-                DBMS_OUTPUT.PUT_LINE('Ocurrió un error al procesar el estudiante con DNI: ' || estudiante.DNI);
+                RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error al procesar el estudiante con DNI: ' || estudiante.DNI);
                 ROLLBACK;
         END;
     END LOOP;
 EXCEPTION
     WHEN OTHERS THEN
         -- Manejo de excepción para errores generales
-        DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+        RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error general en el procedimiento PR_MATRICULA_ESTUDIANTES.');
         ROLLBACK;
 END;
 /
@@ -293,17 +294,18 @@ BEGIN
       END LOOP;
       
       COMMIT; -- Commit después de cada iteración del bucle interno
+
     EXCEPTION
       WHEN OTHERS THEN
         -- Manejo de excepción para errores generales
-        DBMS_OUTPUT.PUT_LINE('Ocurrió un error al crear aulas para la sede: ' || i.CODIGO);
+        RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error al crear aulas para la sede: ' || i.CODIGO);
         ROLLBACK;
     END;
   END LOOP;
 EXCEPTION
   WHEN OTHERS THEN
     -- Manejo de excepción para errores generales
-    DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+    RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error general en el procedimiento PR_RELLENA_AULAS.');
     ROLLBACK;
 END;
 /
@@ -313,11 +315,12 @@ CREATE OR REPLACE PROCEDURE PR_BORRA_AULA_SEDE (PCODIGOSEDE SEDE.CODIGO%TYPE) AS
 BEGIN
   DELETE FROM AULA
   WHERE SEDE_CODIGO = PCODIGOSEDE;
+  
   COMMIT;
 EXCEPTION
   WHEN OTHERS THEN
     -- Manejo de excepción para errores generales
-    DBMS_OUTPUT.PUT_LINE('Ocurrió un error al borrar las aulas de la sede: ' || PCODIGOSEDE);
+    RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error al borrar las aulas de la sede: ' || PCODIGOSEDE);
     ROLLBACK;
 END;
 /
@@ -331,14 +334,14 @@ BEGIN
     EXCEPTION
       WHEN OTHERS THEN
         -- Manejo de excepción para errores generales
-        DBMS_OUTPUT.PUT_LINE('Ocurrió un error al borrar las aulas de la sede: ' || i.SEDE_CODIGO);
+        RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error al borrar las aulas de la sede: ' || i.SEDE_CODIGO);
         ROLLBACK;
     END;
   END LOOP;
 EXCEPTION
   WHEN OTHERS THEN
     -- Manejo de excepción para errores generales
-    DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+    RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error general en el procedimiento PR_BORRA_AULAS.');
     ROLLBACK;
 END;
 /
@@ -412,6 +415,13 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     p_nombre_usuario := v_usuario;
     p_contrasena := v_contrasena;
     
+    COMMIT;
+
+    EXCEPTION
+    WHEN OTHERS THEN
+    -- Manejo de excepción para errores generales
+    RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error al crear un estudiante.');
+    ROLLBACK; -- Deshacer todos los cambios realizados en caso de un error general
     
 
   END PR_CREA_ESTUDIANTE;
@@ -452,10 +462,13 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     -- Asignar los valores generados a los argumentos de salida
     p_nombre_usuario := v_usuario;
     p_contrasena := v_contrasena;
+
+    COMMIT;
+
     EXCEPTION
   WHEN OTHERS THEN
     -- Manejo de excepción para errores generales
-    DBMS_OUTPUT.PUT_LINE('Ocurrió un error general en el procedimiento.');
+    RAISE_APPLICATION_ERROR(-20001, 'Ocurrió un error al crear un vocal.');
     ROLLBACK; -- Deshacer todos los cambios realizados en caso de un error general
   END PR_CREA_VOCAL;
   
@@ -476,13 +489,17 @@ BEGIN
   DBMS_OUTPUT.PUT_LINE('Contraseña: ' || v_contrasena);
 END;
 /
+
+
+
+
+
 -- 4. PAQUETES PL/SQL
 
 -- PQ_ASIGNA
 CREATE OR REPLACE PACKAGE PK_ASIGNA AS
 
     FUNCTION F_PLAZAS(codigo_sede VARCHAR2) RETURN NUMBER;
-    
     PROCEDURE PR_ASIGNA_SEDE;
     
 END PK_ASIGNA;
@@ -585,6 +602,8 @@ CREATE OR REPLACE PACKAGE BODY PK_ASIGNA AS
         
         COMMIT;
         DBMS_OUTPUT.PUT_LINE('Asignación de sedes completada.');
+
+
         EXCEPTION
           WHEN OTHERS THEN
             ROLLBACK;
@@ -1062,8 +1081,7 @@ BEGIN
     WHEN OTHERS THEN
         -- Rollback the transaction
         ROLLBACK;
-        -- Raise an exception
-        RAISE_APPLICATION_ERROR(-20001, 'An error occurred: ' || SQLERRM);
+        RAISE_APPLICATION_ERROR(-20001, 'Ha ocurrido un error: ' || SQLERRM);
 END;
 /
 
