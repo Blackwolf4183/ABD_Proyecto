@@ -4,7 +4,7 @@
 - TODO: hay que ver si aumentando numero de aulas caben todos los estudiantes, hay algo raro en la asignacion, con menos de 500 alumnos capacidad aula da problemas
 - TODO: trigger hay añadir asistencia quizas y cualquier otra tabla que tenga que ver con el alumno
 - REVIEW: hay que revisar los permisos a pevau que no den problemas al asignarlo por rol..
-- TODO: crear alguna politica VPD mas para vocal
+
 - TODO: política gestión de contraseñas ????
 - TODO: crear archivo con distintos usuario y diferentes selects, deletes, que deberian de ser capaces de hacer y algo que no deberían ser capaces de hacer
 - TODO: revisar PK_OCUPACION arreglar lo que no funcione
@@ -59,8 +59,7 @@
         - Se han introducido suficientes datos para comprobar la integridad del modelo lógico -> sí con los procedimientos de arriba
         - Se han tratado correctamente mayusculas, minúsculas -> sí REVIEW: mirar a ver si se refiere a algo mas
         
-        - TODO: DESPISTE
-        - TODO: MIGRAR s
+
 
 
     - MAS COSAS DE LA PRIMERA PARTE QUE DECIR
@@ -73,7 +72,6 @@
 
     - mostrar función de VPD 
     - Asignar usuarios a roles: en system 
-    - Política de gestión de contraseñas: TODO: introducir creo mediante triggers -> preguntar chatgpt
     - Activación de TDE -> hecho en  seguridad.sql
     - Auditoría -> hecho en el seguridad.sql
 
