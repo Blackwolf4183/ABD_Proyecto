@@ -1,12 +1,8 @@
 
 
 # TODO
-- TODO: trigger hay añadir asistencia quizas y cualquier otra tabla que tenga que ver con el alumno
 
 - TODO: política gestión de contraseñas ????
-- TODO: crear archivo con distintos usuario y diferentes selects, deletes, que deberian de ser capaces de hacer y algo que no deberían ser capaces de hacer
-- TODO: revisar PK_OCUPACION arreglar lo que no funcione
-
 
 # Presentacion
 

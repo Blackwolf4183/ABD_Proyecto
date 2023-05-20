@@ -68,3 +68,13 @@ BEGIN
   );
 END;
 /
+
+-- SI HAY QUE DESACTIVAR LA POLITICA
+BEGIN
+  DBMS_RLS.DROP_POLICY(
+    object_schema   => 'PEVAU',
+    object_name     => 'V_ESTUDIANTES',
+    policy_name     => 'politica_estudiantes'
+  );
+END;
+/

@@ -5,11 +5,16 @@ CREATE OR REPLACE FUNCTION es_usuario_estudiante (
   ESTUDIANTE IN VARCHAR2
 ) RETURN VARCHAR2 IS
 BEGIN
-  -- Compara el nombre de usuario con el DNI, truncar la cadena para que pille el DNI
-  RETURN 'DNI = SUBSTR(SYS_CONTEXT(''USERENV'', ''SESSION_USER''), 2)';
-
+  -- Check if the user is PEVAU and bypass VPD policy enforcement
+  IF SYS_CONTEXT('USERENV', 'SESSION_USER') = 'PEVAU' THEN
+    RETURN NULL;
+  ELSE
+    -- Return the desired VPD policy predicate for other users
+    RETURN 'DNI = SUBSTR(SYS_CONTEXT(''USERENV'', ''SESSION_USER''), 2)';
+  END IF;
 END;
 /
+
 
 
 

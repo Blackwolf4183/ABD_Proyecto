@@ -841,11 +841,18 @@ BEGIN
         RAISE_APPLICATION_ERROR(-20002, 'No se puede borrar el aula porque hay examenes planificados en las proximas 48 horas.');
     END IF;
     
-    -- Como resultado, todos los examenes que esten planificados para dicha aula se eliminan de la tabla "EXAMEN" y "MATERIA_EXAMEN"
+    -- Como resultado, todos los examenes que esten planificados para dicha aula se eliminan de la tabla "EXAMEN" y "MATERIA_EXAMEN"Ç
+    -- Y otras tablas asociadas
     DELETE FROM EXAMEN
     WHERE AULA_CODIGO = :OLD.CODIGO AND FECHAYHORA >= SYSDATE;
     
     DELETE FROM MATERIA_EXAMEN
+    WHERE EXAMEN_AULA_CODIGO = :OLD.CODIGO AND EXAMEN_FECHAYHORA >= SYSDATE;
+    
+    DELETE FROM ASISTENCIA
+    WHERE EXAMEN_AULA_CODIGO = :OLD.CODIGO AND EXAMEN_FECHAYHORA >= SYSDATE;
+    
+    DELETE FROM VIGILANCIA
     WHERE EXAMEN_AULA_CODIGO = :OLD.CODIGO AND EXAMEN_FECHAYHORA >= SYSDATE;
 END;
 /
