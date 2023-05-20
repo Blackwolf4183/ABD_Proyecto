@@ -751,12 +751,15 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
                 EXAMEN_FECHAYHORA = examen.EXAMEN_FECHAYHORA AND
                 EXAMEN_AULA_CODIGO = examen.EXAMEN_AULA_CODIGO;
                 
+                DBMS_OUTPUT.PUT_LINE('v_total_alumnos: ' || v_total_alumnos);
+
                 SELECT COUNT(*) INTO v_total_vigilantes
-                FROM ASISTENCIA 
+                FROM VIGILANCIA 
                 WHERE 
                 EXAMEN_FECHAYHORA = examen.EXAMEN_FECHAYHORA AND
                 EXAMEN_AULA_CODIGO = examen.EXAMEN_AULA_CODIGO;
                 
+                -- 1/200 <= 1/36
                 IF (1/p_ratio) > (v_total_vigilantes/v_total_alumnos) THEN
                     RETURN FALSE;
                 END IF;
@@ -768,6 +771,7 @@ CREATE OR REPLACE PACKAGE BODY PK_OCUPACION AS
   
 END PK_OCUPACION;
 /
+
 
 BEGIN
     DBMS_OUTPUT.PUT_LINE(PK_OCUPACION.OCUPACION_MAXIMA('SEDE11AULA7','11'));
@@ -805,10 +809,11 @@ END;
 DECLARE
     v_result BOOLEAN;
 BEGIN
-    v_result := PK_OCUPACION.VOCAL_RATIO(200);
+    v_result := PK_OCUPACION.VOCAL_RATIO(300);
     DBMS_OUTPUT.PUT_LINE('Se cumple el ratio de vocales: ' || CASE WHEN v_result THEN 'TRUE' ELSE 'FALSE' END);
 END;
 /
+
 
 -- TRIGGERS TR_BORRA_AULA
 
@@ -928,7 +933,7 @@ BEGIN
     
     SELECT COUNT(*) INTO n_aulas_ing FROM MATRICULA 
     WHERE MATERIA_CODIGO = 'IngAcc' GROUP BY MATERIA_CODIGO;
-    n_aulas_ing := ROUND(n_aulas_ing/capacidad_aulas);
+    n_aulas_ing := CEIL(n_aulas_ing/capacidad_aulas);
     
     DBMS_OUTPUT.PUT_LINE('hist: ' ||n_aulas_hist  || 'len: ' ||n_aulas_len || 'ing: ' || n_aulas_ing);
     
@@ -947,10 +952,10 @@ BEGIN
         -- vamos a ir cogiendo las aulas que necesitemos
         FOR codigos IN codigos_aulas LOOP
                                 
-            if codigos.rownum < n_aulas_iteracion THEN
+            if codigos.rownum <= n_aulas_iteracion THEN
                 --DBMS_OUTPUT.PUT_LINE('rownum: ' || codigos.rownum);
                 --DBMS_OUTPUT.PUT_LINE('codigo_aula: ' || codigos.codigo || ' codigo_sede: ' || codigos.sede_codigo);
-                INSERT INTO EXAMEN VALUES(Fechas(i),codigos.codigo,codigos.sede_codigo);
+                INSERT INTO EXAMEN VALUES(Fechas(i),codigos.codigo,codigos.sede_codigo,0);
                 -- AÃ±adimos al mismo tiempo los registros de materia_examen
                 IF i = 1 THEN
                     INSERT INTO MATERIA_EXAMEN VALUES(Fechas(i),codigos.codigo,codigos.sede_codigo,'HisE');
@@ -974,15 +979,16 @@ BEGIN
 END;
 /
 
+
 -- Rellenar tabla de vigilancia
 -- Tabla vigilancia
 CREATE OR REPLACE PROCEDURE RELLENA_VIGILANCIA 
 AS
     CURSOR examenes IS 
     SELECT * FROM EXAMEN
-    WHERE FECHAYHORA IN (TO_DATE('2023/05/01 08:00:00', 'yyyy/mm/dd hh24:mi:ss'), 
-                        TO_DATE('2023/05/02 11:30:00', 'yyyy/mm/dd hh24:mi:ss'),
-                        TO_DATE('2023/05/03 13:00:00', 'yyyy/mm/dd hh24:mi:ss'));
+    WHERE FECHAYHORA IN (TO_DATE('2023/06/01 08:00:00', 'yyyy/mm/dd hh24:mi:ss'), 
+                        TO_DATE('2023/06/02 11:30:00', 'yyyy/mm/dd hh24:mi:ss'),
+                        TO_DATE('2023/06/03 13:00:00', 'yyyy/mm/dd hh24:mi:ss'));
     
     VOCAL_DNI VARCHAR(9);
 BEGIN

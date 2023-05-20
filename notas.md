@@ -1,15 +1,12 @@
 
 
 # TODO
-- TODO: hay que ver si aumentando numero de aulas caben todos los estudiantes, hay algo raro en la asignacion, con menos de 500 alumnos capacidad aula da problemas
 - TODO: trigger hay añadir asistencia quizas y cualquier otra tabla que tenga que ver con el alumno
-- REVIEW: hay que revisar los permisos a pevau que no den problemas al asignarlo por rol..
 
 - TODO: política gestión de contraseñas ????
 - TODO: crear archivo con distintos usuario y diferentes selects, deletes, que deberian de ser capaces de hacer y algo que no deberían ser capaces de hacer
 - TODO: revisar PK_OCUPACION arreglar lo que no funcione
 
->>> TODO: PREPARAR MEMORIA DONDE VAYA PONIENDO CADA PASO Y SE VEA QUE FUNCIONA POR SI ALGO FALLA
 
 # Presentacion
 
@@ -57,7 +54,7 @@
         - Rellenar materia, asistencia, vigilancia -> ejecutar
             - Se consideran procedimientos extras a los propuestos
         - Se han introducido suficientes datos para comprobar la integridad del modelo lógico -> sí con los procedimientos de arriba
-        - Se han tratado correctamente mayusculas, minúsculas -> sí REVIEW: mirar a ver si se refiere a algo mas
+        - Se han tratado correctamente mayusculas, minúsculas
         
 
 
