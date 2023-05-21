@@ -406,6 +406,7 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     EXECUTE IMMEDIATE 'GRANT ESTUDIANTE TO ' || v_usuario;
     EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ' || v_usuario;
     EXECUTE IMMEDIATE 'grant read,write on directory directorio_ext to ' || v_usuario;
+    EXECUTE IMMEDIATE 'ALTER USER ' || v_usuario || ' PROFILE perfil_contrasena';
     
     -- Asignar los valores generados a los argumentos de salida
     p_nombre_usuario := v_usuario;
@@ -454,6 +455,7 @@ CREATE OR REPLACE PACKAGE BODY PK_CREACION_USUARIOS AS
     END IF;
     EXECUTE IMMEDIATE 'GRANT CREATE SESSION TO ' || v_usuario;
     EXECUTE IMMEDIATE 'grant read,write on directory directorio_ext to ' || v_usuario;
+    EXECUTE IMMEDIATE 'ALTER USER ' || v_usuario || ' PROFILE perfil_contrasena';
     
     -- Asignar los valores generados a los argumentos de salida
     p_nombre_usuario := v_usuario;

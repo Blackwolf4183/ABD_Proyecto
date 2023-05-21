@@ -18,8 +18,6 @@ END;
 
 
 
-
-
 -- ### TDE ###
 
 -- EN SYSTEM
@@ -62,7 +60,7 @@ GRANT SELECT ON PEVAU.ESTUDIANTES_EXT TO ESTUDIANTE;
 GRANT CREATE TABLE, CREATE VIEW, CREATE MATERIALIZED VIEW, 
 CREATE SEQUENCE, CREATE PROCEDURE, CREATE SESSION, CREATE ROLE,
 DROP USER, GRANT ANY PRIVILEGE, CREATE USER,GRANT ANY ROLE, AUDIT_ADMIN,
-CREATE TRIGGER, CREATE PUBLIC SYNONYM,CREATE ANY DIRECTORY TO ADMINISTRADOR;
+CREATE TRIGGER, CREATE PUBLIC SYNONYM,CREATE ANY DIRECTORY,  ALTER USER TO ADMINISTRADOR;
 
 GRANT ADMINISTRADOR TO PEVAU;
 
@@ -98,3 +96,12 @@ GRANT SELECT ON PEVAU.V_CONTADOR_ESTUDIANTES_EXAMEN TO PERSONAL_SERVICIO;
 -- Vamos a crear ya de paso un usuario de personal de servicio para más adelante poder usarlo 
 CREATE USER usuario_personal_servicio IDENTIFIED BY AS012934;
 GRANT PERSONAL_SERVICIO TO usuario_personal_servicio;
+
+-- perfil para gestión de contraseñas
+CREATE PROFILE perfil_contrasena LIMIT
+SESSIONS_PER_USER 3 -- Máximo núm. de sesiones para ese usuario.
+CONNECT_TIME UNLIMITED -- Duración máxima de la conexión.
+IDLE_TIME 120 -- Minutos de tiempo muerto en una sesión.
+FAILED_LOGIN_ATTEMPTS 4 -- nº máximo de intentos para bloquear cuenta.
+PASSWORD_LIFE_TIME 90 -- Nº de días de expiración de la password.
+PASSWORD_GRACE_TIME 3; -- Periodo de gracia después de los 90 días.
