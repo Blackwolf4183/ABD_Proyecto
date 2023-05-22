@@ -71,3 +71,34 @@
 5) usuarios.sql
 
     - mostrar que cada tipo de usuario con rol puede acceder a determinados elementos
+
+
+
+
+Reparto:
+
+- Chincoa:
+    Parte obligatoria:
+    - 1
+    - 2
+    - 3
+
+- Pere:
+    Parte obligatoria.
+    - 4 menos PK_OCUPACION
+    - 5
+    - 6
+    - 7
+    - 8
+
+- Mario:
+    Parte opcional:
+    - 2
+    - 3
+    - 4
+- Gome
+    Parte opcional:
+    - 5
+    Parte obligatoria:
+    - 5 -> PK_OCUPACION, PR_CREA_ESTUDIANTE, PR_CREA_VOCAL
+    - 9 
